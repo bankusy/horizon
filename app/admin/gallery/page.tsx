@@ -237,9 +237,9 @@ export default function GalleryManagementPage() {
                 
                 <TabsContent value="list" className="mt-0 focus-visible:outline-none">
                     {selectedIds.length > 0 && (
-                        <div className="mb-4 p-4 bg-zinc-50 border border-border rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="mb-4 p-4 bg-muted border border-border rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold text-zinc-900">{selectedIds.length}개 항목 선택됨</span>
+                                <span className="text-sm font-bold text-foreground">{selectedIds.length}개 항목 선택됨</span>
                                 <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])} className="h-8 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">
                                     선택 해제
                                 </Button>
@@ -255,7 +255,7 @@ export default function GalleryManagementPage() {
                             </Button>
                         </div>
                     )}
-                    <div className="rounded-xl border border-border bg-white  overflow-hidden">
+                    <div className="rounded-xl border border-border bg-card overflow-hidden">
                         {isLoading ? (
                             <div className="py-20 flex flex-col items-center justify-center">
                                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
@@ -280,8 +280,8 @@ export default function GalleryManagementPage() {
                 </TabsContent>
 
                 <TabsContent value="banner" className="mt-0 focus-visible:outline-none w-full space-y-6">
-                    <Card className="rounded-xl border-border  overflow-hidden">
-                        <div className="p-6 border-b bg-zinc-50/50">
+                    <Card className="rounded-xl border-border overflow-hidden">
+                        <div className="p-6 border-b bg-muted/30">
                             <h3 className="text-lg font-bold">새 배너 등록</h3>
                             <p className="text-sm text-muted-foreground">홈페이지 최상단 슬라이드에 표시될 큰 배너 이미지를 등록합니다.</p>
                         </div>
@@ -290,8 +290,8 @@ export default function GalleryManagementPage() {
 
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 px-2">
-                            <h3 className="text-xl font-black uppercase tracking-tight">현재 배너 목록</h3>
-                            <span className="px-2 py-0.5 rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-500">{banners.length}</span>
+                            <h3 className="text-xl font-black uppercase tracking-tight text-foreground">현재 배너 목록</h3>
+                            <span className="px-2 py-0.5 rounded-full bg-secondary text-[10px] font-bold text-muted-foreground">{banners.length}</span>
                         </div>
                         <BannerList banners={banners} onDelete={handleDeleteBanner} />
                     </div>
