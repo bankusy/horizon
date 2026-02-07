@@ -228,13 +228,8 @@ export default function Home() {
 
     return (
         <main className="min-h-screen bg-background font-sans selection:bg-background selection:text-foreground overflow-x-hidden">
-            <motion.header
-                initial={{ opacity: 0, y: -20 }}
-                animate={{
-                    opacity: assetsLoaded ? 1 : 0,
-                    y: assetsLoaded ? 0 : -20,
-                }}
-                transition={{ duration: 1, ease: "easeOut" }}
+            <div
+               
                 className="w-full bg-background pt-20 md:pt-24 pb-16 md:pb-24 border-b border-border/50"
             >
                 <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-center lg:flex-row justify-between lg:items-end gap-14 lg:gap-6 text-center lg:text-right">
@@ -278,7 +273,7 @@ export default function Home() {
                         </div>
                     </div>
                 </div>
-            </motion.header>
+            </div>
 
             {/* Professional Banner Carousel - Full Width */}
             <section className="relative h-[60vh] md:h-[85vh] w-full overflow-hidden group bg-muted/20">
