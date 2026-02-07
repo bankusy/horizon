@@ -22,10 +22,10 @@ export function Navigation() {
 
     return (
         <nav
-            className={`h-(--navbar-height) fixed top-0 left-0 w-full z-100 transition-all duration-500  ${
+            className={`fixed top-0 left-0 w-full z-100 transition-all duration-500 flex items-center  ${
                 isScrolled
-                    ? "bg-background/80 backdrop-blur-xl border-b border-border/50 py-3 md:py-4"
-                    : "bg-background/0 py-6 md:py-8"
+                    ? "bg-background/80 backdrop-blur-xl border-b border-border/50 py-3 md:py-4 h-16 md:h-20"
+                    : "bg-background/0 py-5 md:py-8 min-h-[80px] md:min-h-[120px]"
             }`}
         >
             <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex items-center justify-between">
