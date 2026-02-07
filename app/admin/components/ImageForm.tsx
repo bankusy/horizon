@@ -290,7 +290,7 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
             <Button
               onClick={startBulkUpload}
               disabled={isProcessing}
-              className="w-full h-12 rounded-xl font-bold bg-zinc-900 hover:bg-zinc-800 text-white  transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full h-10 rounded-lg font-bold text-[11px] uppercase tracking-[0.2em] bg-zinc-900 hover:bg-zinc-800 text-white transition-all"
             >
               {isProcessing ? (
                 <>

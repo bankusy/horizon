@@ -86,10 +86,26 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 border-t border-border mt-auto">
         <SidebarMenu>
           <SidebarMenuItem>
+            <SidebarMenuButton 
+              onClick={() => {
+                // Clear session
+                document.cookie = "admin_session=; path=/; max-age=0";
+                localStorage.removeItem("admin_session");
+                window.location.href = "/admin/login";
+              }}
+              className="h-10 px-3 rounded-md hover:bg-zinc-100 text-muted-foreground hover:text-destructive group transition-colors"
+            >
+              <div className="flex items-center gap-3 w-full">
+                <ArrowLeft size={18} className="group-hover:text-destructive" />
+                <span className="text-sm font-medium">관리자 로그아웃</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton asChild className="h-10 px-3 rounded-md hover:bg-zinc-100">
               <Link href="/" className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft size={18} />
-                <span className="text-sm font-medium">관리자 나가기</span>
+                <User size={18} />
+                <span className="text-sm font-medium">웹사이트 바로가기</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

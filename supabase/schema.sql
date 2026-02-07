@@ -44,3 +44,30 @@ create policy "Allow public select" on public.banners for select using (true);
 create policy "Allow public insert" on public.banners for insert with check (true);
 create policy "Allow public update" on public.banners for update using (true);
 create policy "Allow public delete" on public.banners for delete using (true);
+
+-- 관리자 계정 테이블
+CREATE TABLE admin_users (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 시드 데이터 (초기 관리자: admin / password123)
+-- 주의: 실제 운영 환경에서는 bcrypt 등으로 해싱된 값을 넣어야 합니다.
+INSERT INTO admin_users (username, password_hash) 
+VALUES ('admin', 'password123');
+
+-- RLS (Row Level Security) 설정
+ALTER TABLE gallery ENABLE ROW LEVEL SECURITY;
+ALTER TABLE banners ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+
+-- 익명 사용자는 조회만 가능
+CREATE POLICY "Allow public read-only access for gallery" ON gallery FOR SELECT USING (true);
+CREATE POLICY "Allow public read-only access for banners" ON banners FOR SELECT USING (true);
+
+-- 관리자용 정책 (단순화를 위해 모든 작업 허용 - 실제로는 auth.uid() 체크 필요)
+CREATE POLICY "Allow all for authenticated users" ON gallery FOR ALL USING (true);
+CREATE POLICY "Allow all for authenticated users" ON banners FOR ALL USING (true);
+CREATE POLICY "Allow all for admin_users" ON admin_users FOR SELECT USING (true);

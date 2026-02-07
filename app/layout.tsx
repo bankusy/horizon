@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { Toaster } from "@/components/ui/sonner";
 
+const pretendard = localFont({
+  src: "../public/fonts/PretendardVariable.ttf",
+  variable: "--font-pretendard",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "HORIZON - Architectural Visualization Studio",
+  title: "투시도 건축 CG 전문 호리즌",
   description: "Premium high-end architectural visualization and interior design studio.",
 };
 
@@ -14,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
-      <body className="antialiased font-sans">
+    <html lang="ko" className={pretendard.variable} suppressHydrationWarning>
+      <body className="antialiased min-h-screen bg-background text-foreground">
         <Providers>
           {children}
           <Toaster position="top-center" richColors />

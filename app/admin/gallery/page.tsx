@@ -6,6 +6,7 @@ import { ImageForm } from "../components/ImageForm";
 import { ImageList } from "../components/ImageList";
 import { BannerForm } from "../components/BannerForm";
 import { BannerList } from "../components/BannerList";
+import { EditImageDialog } from "../components/EditImageDialog";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +27,7 @@ export default function GalleryManagementPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("list");
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
+    const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
 
     // Fetch images and banners from Supabase on mount
     React.useEffect(() => {
@@ -169,6 +171,31 @@ export default function GalleryManagementPage() {
         setBanners(prev => prev.filter(b => b.id !== id));
     };
 
+    const handleUpdateImage = async (id: string | number, updates: { title: string; category: string }) => {
+        if (!supabase) return;
+
+        try {
+            const { error } = await supabase
+                .from("gallery")
+                .update({
+                    title: updates.title,
+                    category: updates.category
+                })
+                .eq("id", id);
+
+            if (error) throw error;
+
+            setImages(prev => prev.map(img => 
+                img.id === id ? { ...img, alt: updates.title, category: updates.category } : img
+            ));
+            toast.success("정보가 성공적으로 수정되었습니다.");
+        } catch (error: any) {
+            console.error("Update error:", error);
+            toast.error("수정에 실패했습니다.");
+            throw error;
+        }
+    };
+
     return (
         <div className="space-y-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -243,6 +270,7 @@ export default function GalleryManagementPage() {
                             <ImageList 
                                 images={images} 
                                 onDelete={handleDeleteImage}
+                                onEdit={setEditingImage}
                                 selectedIds={selectedIds}
                                 onSelectionChange={setSelectedIds}
                             />
@@ -274,6 +302,13 @@ export default function GalleryManagementPage() {
                     </div>
                 </TabsContent>
             </Tabs>
+
+            <EditImageDialog 
+                isOpen={!!editingImage}
+                onClose={() => setEditingImage(null)}
+                onSave={handleUpdateImage}
+                image={editingImage}
+            />
         </div>
     );
 }

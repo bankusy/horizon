@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { Trash2, ExternalLink, Image as ImageIcon, Edit2 } from "lucide-react";
 import Image from "next/image";
 
 interface GalleryImage {
@@ -24,6 +24,7 @@ interface GalleryImage {
 interface ImageListProps {
     images: GalleryImage[];
     onDelete?: (id: string | number) => void;
+    onEdit?: (image: GalleryImage) => void;
     selectedIds: (string | number)[];
     onSelectionChange: (ids: (string | number)[]) => void;
 }
@@ -31,6 +32,7 @@ interface ImageListProps {
 export function ImageList({
     images,
     onDelete,
+    onEdit,
     selectedIds,
     onSelectionChange,
 }: ImageListProps) {
@@ -139,6 +141,15 @@ export function ImageList({
                                 </TableCell>
                                 <TableCell className="pr-6 text-right">
                                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-md hover:bg-white border border-transparent hover:border-border"
+                                            onClick={() => onEdit?.(img)}
+                                            title="수정하기"
+                                        >
+                                            <Edit2 size={14} className="text-zinc-500" />
+                                        </Button>
                                         <Button
                                             variant="ghost"
                                             size="icon"
