@@ -70,7 +70,7 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     isActive={pathname === item.url}
-                    className="h-10 px-3 rounded-md transition-all hover:bg-zinc-100 data-[active=true]:bg-zinc-100 data-[active=true]:text-foreground"
+                    className="h-10 px-3 rounded-md transition-all hover:bg-muted data-[active=true]:bg-secondary data-[active=true]:text-secondary-foreground"
                   >
                     <Link href={item.url} className="flex items-center gap-3">
                       <item.icon size={18} className={pathname === item.url ? "text-foreground" : "text-muted-foreground"} />
@@ -93,7 +93,7 @@ export function AppSidebar() {
                 localStorage.removeItem("admin_session");
                 window.location.href = "/admin/login";
               }}
-              className="h-10 px-3 rounded-md hover:bg-zinc-100 text-muted-foreground hover:text-destructive group transition-colors"
+              className="h-10 px-3 rounded-md hover:bg-muted text-muted-foreground hover:text-destructive group transition-colors"
             >
               <div className="flex items-center gap-3 w-full">
                 <ArrowLeft size={18} className="group-hover:text-destructive" />
@@ -102,7 +102,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="h-10 px-3 rounded-md hover:bg-zinc-100">
+            <SidebarMenuButton asChild className="h-10 px-3 rounded-md hover:bg-muted">
               <Link href="/" className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors">
                 <User size={18} />
                 <span className="text-sm font-medium">웹사이트 바로가기</span>

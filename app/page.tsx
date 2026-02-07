@@ -564,7 +564,7 @@ export default function Home() {
                         </div>
 
                         {/* Main Image Container */}
-                        <div className="flex-1 relative flex items-center justify-center p-4 md:p-16">
+                        <div className="flex-1 relative flex items-center justify-center">
                             <button
                                 onClick={prevLightbox}
                                 className="absolute left-8 md:left-12 z-60 p-5 rounded-full bg-white/5 border border-white/5 text-white hover:bg-white/10 hover:scale-105 active:scale-95 transition-all duration-500 hidden lg:block"
@@ -594,7 +594,7 @@ export default function Home() {
                                         duration: 0.8,
                                         ease: [0.22, 1, 0.36, 1],
                                     }}
-                                    className="relative w-full h-full max-w-[95vw] max-h-[90vh] md:max-h-[95vh] flex items-center justify-center"
+                                    className="relative w-full h-full flex items-center justify-center"
                                 >
                                     <div className="relative w-full h-full">
                                         <Image

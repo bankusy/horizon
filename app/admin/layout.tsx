@@ -31,8 +31,8 @@ export default function AdminLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="flex-1 flex flex-col min-h-screen bg-white">
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border px-8 bg-white sticky top-0 z-10">
+      <main className="flex-1 flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border px-8 bg-background sticky top-0 z-10 transition-colors duration-500">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="h-4" />
@@ -53,7 +53,7 @@ export default function AdminLayout({
             </Breadcrumb>
           </div>
           <div className="flex items-center gap-4">
-             <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center border border-border">
+             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border">
                 <span className="text-[10px] font-bold">JD</span>
              </div>
           </div>
