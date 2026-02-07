@@ -49,7 +49,7 @@ export function Navigation() {
             </div>
 
             {/* Progress Bar at the absolute bottom */}
-            <div className="absolute bottom-0 left-0 h-[1.5px] w-full bg-border/10">
+            <div className={`absolute bottom-0 left-0 h-[1.5px] w-full bg-border/10 transition-opacity duration-500 ${isScrolled ? "opacity-100" : "opacity-0"}`}>
                 <motion.div
                     className="h-full bg-foreground"
                     style={{ width: `${scrollProgress}%` }}
