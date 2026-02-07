@@ -232,9 +232,9 @@ export default function Home() {
                
                 className="w-full bg-background pt-20 md:pt-24 pb-16 md:pb-24 border-b border-border/50"
             >
-                <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-center lg:flex-row justify-between lg:items-end gap-14 lg:gap-6 text-center lg:text-right">
+                <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-center lg:flex-row justify-between lg:items-end gap-14 lg:gap-6 text-center lg:text-right pb-1">
                     <div className="flex flex-col items-center lg:items-start relative lg:right-1.5">
-                        <h1 className="flex items-center justify-center lg:justify-start gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none translate-x-4">
+                        <h1 className="flex items-center justify-center lg:justify-start gap-4 min-[400px]:gap-6 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none">
                             <div className="flex-shrink-0">
                                 <Image
                                     width={128}
@@ -246,16 +246,21 @@ export default function Home() {
                                         if (e.currentTarget.complete)
                                             setLogoLoaded(true);
                                     }}
-                                    className="w-16 min-[400px]:w-20 md:w-32 lg:w-40"
+                                    className="w-24 min-[400px]:w-28 md:w-32 lg:w-40"
                                 />
                             </div>
-                            <BlurText
-                                text="HORIZON"
-                                delay={400}
-                                animateBy="words"
-                                direction="top"
-                                className="text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter"
-                            />
+                            <div className="flex flex-col items-center lg:items-start min-w-0">
+                                <BlurText
+                                    text="HORIZON"
+                                    delay={400}
+                                    animateBy="words"
+                                    direction="top"
+                                    className="text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter"
+                                />
+                                <p className="mt-1 sm:mt-2 text-[8px] min-[400px]:text-[9px] sm:text-[10px] md:text-xs tracking-[0.3em] sm:tracking-[0.4em] md:tracking-[0.5em] text-muted-foreground/60 uppercase font-light leading-none whitespace-nowrap">
+                                    ARCHITECTURAL VISUALIZATION STUDIO
+                                </p>
+                            </div>
                             {/* Spacer to perfectly center the title on mobile/tablet */}
                             <div 
                                 className="lg:hidden w-16 min-[400px]:w-20 md:w-32 flex-shrink-0 invisible" 
@@ -263,13 +268,11 @@ export default function Home() {
                             />
                         </h1>
                     </div>
-                    <div className="flex flex-col items-center lg:items-end lg:text-right gap-1.5 text-[9px] sm:text-[10px] md:text-sm font-light text-muted-foreground uppercase tracking-[0.2em] sm:tracking-[0.3em] lg:tracking-widest">
-                        <p className="font-bold text-foreground tracking-normal">
-                            JEONG WON SIK
-                        </p>
-                        <div className="flex flex-col items-center lg:items-end gap-1 opacity-60">
+                    <div className="flex flex-col items-center lg:items-end lg:text-right gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] md:text-[11px] font-light text-muted-foreground uppercase tracking-[0.2em] sm:tracking-[0.3em] lg:tracking-widest mb-[1px]">
+                        <div className="flex flex-col items-center lg:items-end gap-1 opacity-60 pb-6">
+                            <p>JEONG WON SIK</p>
                             <p>+82 10 - 3500 - 7742</p>
-                            <p>cghrn@naver.com</p>
+                            <p className="leading-none">cghrn@naver.com</p>
                         </div>
                     </div>
                 </div>
