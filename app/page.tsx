@@ -239,7 +239,7 @@ export default function Home() {
             >
                 <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-center lg:flex-row justify-between lg:items-end gap-14 lg:gap-6 text-center lg:text-right">
                     <div className="flex flex-col items-center lg:items-start relative lg:right-1.5">
-                        <h1 className="flex items-center justify-center lg:justify-start gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none">
+                        <h1 className="flex items-center justify-center lg:justify-start gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none translate-x-4">
                             <div className="flex-shrink-0">
                                 <Image
                                     width={128}
@@ -256,7 +256,7 @@ export default function Home() {
                             </div>
                             <BlurText
                                 text="HORIZON"
-                                delay={1000}
+                                delay={400}
                                 animateBy="words"
                                 direction="top"
                                 className="text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter"
@@ -382,20 +382,17 @@ export default function Home() {
                                 Precision • Aesthetics • Innovation
                             </p>
                         </div>
-                        <div className="flex flex-nowrap gap-3 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 md:mx-0 md:px-0">
+                        <div className="flex flex-nowrap gap-2 min-[400px]:gap-3 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 md:mx-0 md:px-0">
                             {["All", "Exterior", "Interior"].map((cat) => (
                                 <button
                                     key={cat}
                                     onClick={() => setSelectedCategory(cat)}
-                                    className={`px-6 py-2.5 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full transition-all duration-700 flex items-center gap-2 border whitespace-nowrap flex-shrink-0 ${
+                                    className={`px-4 min-[400px]:px-6 py-2.5 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full transition-all duration-700 flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${
                                         selectedCategory === cat
-                                            ? "bg-foreground text-background border-foreground shadow-xl shadow-black/10 scale-105"
-                                            : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted hover:text-foreground"
+                                            ? "bg-foreground text-background"
+                                            : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                                     }`}
                                 >
-                                    <span
-                                        className={`w-1 h-px ${selectedCategory === cat ? "bg-background" : "bg-transparent"}`}
-                                    />
                                     {cat}
                                 </button>
                             ))}
@@ -597,15 +594,17 @@ export default function Home() {
                                         duration: 0.8,
                                         ease: [0.22, 1, 0.36, 1],
                                     }}
-                                    className="relative w-full h-full max-w-[90vw] max-h-[70vh] md:max-h-[85vh]"
+                                    className="relative w-full h-full max-w-[95vw] max-h-[90vh] md:max-h-[95vh] flex items-center justify-center"
                                 >
-                                    <Image
-                                        fill={true}
-                                        className="object-contain"
-                                        src={displayImages[lightboxIndex].src}
-                                        alt={displayImages[lightboxIndex].alt}
-                                        priority
-                                    />
+                                    <div className="relative w-full h-full">
+                                        <Image
+                                            fill={true}
+                                            className="object-contain"
+                                            src={displayImages[lightboxIndex].src}
+                                            alt={displayImages[lightboxIndex].alt}
+                                            priority
+                                        />
+                                    </div>
                                 </motion.div>
                             </AnimatePresence>
 

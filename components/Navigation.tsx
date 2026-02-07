@@ -11,7 +11,7 @@ export default function Navigation() {
         >
             <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-center lg:flex-row justify-between lg:items-end gap-14 lg:gap-6 text-center">
                 <div className="flex flex-col items-center lg:items-start relative lg:right-1.5">
-                    <h1 className="flex items-center justify-center lg:justify-start gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none">
+                    <h1 className="flex items-center justify-center lg:justify-start gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none translate-x-4">
                         <div className="flex-shrink-0">
                             <Image
                                 width={128}
