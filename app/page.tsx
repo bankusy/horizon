@@ -522,7 +522,7 @@ export default function Home() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed h-dvh inset-0 z-50 bg-zinc-950/98 backdrop-blur-3xl flex flex-col"
+                        className="fixed min-h-dvh inset-0 z-50 bg-zinc-950/98 backdrop-blur-3xl flex flex-col"
                     >
                         {/* Lightbox Header */}
                         <div className="absolute top-0 inset-x-0 h-20 md:h-24 px-6 md:px-20 flex items-center justify-between z-60">
