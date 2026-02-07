@@ -222,26 +222,28 @@ export default function Home() {
                 transition={{ duration: 1, ease: "easeOut" }}
                 className="w-full bg-background pt-20 md:pt-24 pb-16 md:pb-24 border-b border-border/50"
             >
-                <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-end md:flex-row justify-between md:items-end gap-14 md:gap-6 text-right">
-                    <div className="flex flex-col items-end md:items-start relative md:right-1.5">
-                        <h1 className="flex items-center gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl md:text-8xl font-medium tracking-tighter leading-none">
+                <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-center lg:flex-row justify-between lg:items-end gap-14 lg:gap-6 text-center lg:text-right">
+                    <div className="flex flex-col items-center lg:items-start relative lg:right-1.5">
+                        <h1 className="flex items-center gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none">
                             <Image
                                 width={128}
                                 height={128}
                                 src={"/logo.svg"}
                                 alt="logo"
                                 priority
-                                onLoadingComplete={() => setLogoLoaded(true)}
+                                onLoad={(e) => {
+                                    if (e.currentTarget.complete) setLogoLoaded(true);
+                                }}
                                 className="w-16 min-[400px]:w-20 md:w-32 lg:w-40"
                             />
                             <span>HORIZON</span>
                         </h1>
                     </div>
-                    <div className="flex flex-col items-end md:text-right gap-1.5 text-[9px] sm:text-[10px] md:text-sm font-light text-muted-foreground uppercase tracking-[0.2em] sm:tracking-[0.3em] md:tracking-widest">
+                    <div className="flex flex-col items-center lg:items-end lg:text-right gap-1.5 text-[9px] sm:text-[10px] md:text-sm font-light text-muted-foreground uppercase tracking-[0.2em] sm:tracking-[0.3em] lg:tracking-widest">
                         <p className="font-bold text-foreground tracking-normal">
                             JEONG WON SIK
                         </p>
-                        <div className="flex flex-col items-end gap-1 opacity-60">
+                        <div className="flex flex-col items-center lg:items-end gap-1 opacity-60">
                             <p>+82 10 - 3500 - 7742</p>
                             <p>cghrn@naver.com</p>
                         </div>

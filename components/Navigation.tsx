@@ -8,9 +8,9 @@ export default function Navigation() {
             animate={{ opacity: 1, y: 0 }}
             className="px-6 md:px-12 lg:px-20 py-20 md:py-20 bg-background border-b border-border/50"
         >
-            <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-end md:flex-row justify-between md:items-end gap-14 md:gap-6 text-right">
-                <div className="flex flex-col items-end md:items-start relative md:right-1.5">
-                    <h1 className="flex items-center gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl md:text-8xl font-medium tracking-tighter leading-none">
+            <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-center lg:flex-row justify-between lg:items-end gap-14 lg:gap-6 text-center">
+                <div className="flex flex-col items-center lg:items-start relative lg:right-1.5">
+                    <h1 className="flex items-center gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none">
                         <Image
                             width={128}
                             height={128}
@@ -27,9 +27,9 @@ export default function Navigation() {
                     </div>
                 </div>
 
-                <div className="flex flex-col items-end md:text-right gap-1.5 text-[9px] sm:text-[10px] md:text-sm font-light text-muted-foreground uppercase tracking-[0.2em] sm:tracking-[0.3em] md:tracking-widest">
+                <div className="flex flex-col items-center lg:items-end lg:text-right gap-1.5 text-[9px] sm:text-[10px] md:text-sm font-light text-muted-foreground uppercase tracking-[0.2em] sm:tracking-[0.3em] lg:tracking-widest">
                     <p className="font-bold text-foreground tracking-normal mb-1">JEONG WON SIK</p>
-                    <div className="flex flex-col items-end gap-1 opacity-60">
+                    <div className="flex flex-col items-center lg:items-end gap-1 opacity-60">
                         <p>+82 10 - 3500 - 7742</p>
                         <p>cghrn@naver.com</p>
                     </div>
