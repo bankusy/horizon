@@ -220,11 +220,6 @@ export default function GalleryManagementPage() {
                         className="rounded-none border-b border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 text-sm font-semibold transition-all text-muted-foreground data-[state=active]:text-foreground relative"
                     >
                         전체 목록 ({images.length})
-                        {selectedIds.length > 0 && (
-                            <span className="absolute -top-1 -right-4 bg-destructive text-destructive-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                                {selectedIds.length}
-                            </span>
-                        )}
                     </TabsTrigger>
                     <TabsTrigger 
                         value="upload" 

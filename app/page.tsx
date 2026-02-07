@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import BlurText from "@/components/BlurText";
 
 interface GalleryImage {
     id: string | number;
@@ -214,29 +215,57 @@ export default function Home() {
         }
     }, [logoLoaded, bannerItems.length]);
 
+    useEffect(() => {
+        if (lightboxIndex !== null) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "unset";
+        }
+        return () => {
+            document.body.style.overflow = "unset";
+        };
+    }, [lightboxIndex]);
+
     return (
         <main className="min-h-screen bg-background font-sans selection:bg-background selection:text-foreground overflow-x-hidden">
-            <motion.header 
+            <motion.header
                 initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: assetsLoaded ? 1 : 0, y: assetsLoaded ? 0 : -20 }}
+                animate={{
+                    opacity: assetsLoaded ? 1 : 0,
+                    y: assetsLoaded ? 0 : -20,
+                }}
                 transition={{ duration: 1, ease: "easeOut" }}
                 className="w-full bg-background pt-20 md:pt-24 pb-16 md:pb-24 border-b border-border/50"
             >
                 <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex flex-col items-center lg:flex-row justify-between lg:items-end gap-14 lg:gap-6 text-center lg:text-right">
                     <div className="flex flex-col items-center lg:items-start relative lg:right-1.5">
-                        <h1 className="flex items-center gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none">
-                            <Image
-                                width={128}
-                                height={128}
-                                src={"/logo.svg"}
-                                alt="logo"
-                                priority
-                                onLoad={(e) => {
-                                    if (e.currentTarget.complete) setLogoLoaded(true);
-                                }}
-                                className="w-16 min-[400px]:w-20 md:w-32 lg:w-40"
+                        <h1 className="flex items-center justify-center lg:justify-start gap-2 min-[400px]:gap-4 text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-none">
+                            <div className="flex-shrink-0">
+                                <Image
+                                    width={128}
+                                    height={128}
+                                    src={"/logo.svg"}
+                                    alt="logo"
+                                    priority
+                                    onLoad={(e) => {
+                                        if (e.currentTarget.complete)
+                                            setLogoLoaded(true);
+                                    }}
+                                    className="w-16 min-[400px]:w-20 md:w-32 lg:w-40"
+                                />
+                            </div>
+                            <BlurText
+                                text="HORIZON"
+                                delay={1000}
+                                animateBy="words"
+                                direction="top"
+                                className="text-5xl min-[400px]:text-6xl sm:text-7xl lg:text-8xl font-medium tracking-tighter"
                             />
-                            <span>HORIZON</span>
+                            {/* Spacer to perfectly center the title on mobile/tablet */}
+                            <div 
+                                className="lg:hidden w-16 min-[400px]:w-20 md:w-32 flex-shrink-0 invisible" 
+                                aria-hidden="true" 
+                            />
                         </h1>
                     </div>
                     <div className="flex flex-col items-center lg:items-end lg:text-right gap-1.5 text-[9px] sm:text-[10px] md:text-sm font-light text-muted-foreground uppercase tracking-[0.2em] sm:tracking-[0.3em] lg:tracking-widest">
@@ -257,7 +286,9 @@ export default function Home() {
                     <div className="absolute inset-0 z-50 flex items-center justify-center bg-background">
                         <div className="flex flex-col items-center gap-4">
                             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground/30" />
-                            <p className="text-[10px] tracking-[0.5em] text-muted-foreground/40 uppercase">Loading Experience</p>
+                            <p className="text-[10px] tracking-[0.5em] text-muted-foreground/40 uppercase">
+                                Loading Experience
+                            </p>
                         </div>
                     </div>
                 )}
@@ -351,12 +382,12 @@ export default function Home() {
                                 Precision • Aesthetics • Innovation
                             </p>
                         </div>
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-nowrap gap-3 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 md:mx-0 md:px-0">
                             {["All", "Exterior", "Interior"].map((cat) => (
                                 <button
                                     key={cat}
                                     onClick={() => setSelectedCategory(cat)}
-                                    className={`px-6 py-2.5 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full transition-all duration-700 flex items-center gap-2 border ${
+                                    className={`px-6 py-2.5 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full transition-all duration-700 flex items-center gap-2 border whitespace-nowrap flex-shrink-0 ${
                                         selectedCategory === cat
                                             ? "bg-foreground text-background border-foreground shadow-xl shadow-black/10 scale-105"
                                             : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted hover:text-foreground"
@@ -612,4 +643,3 @@ export default function Home() {
         </main>
     );
 }
-
