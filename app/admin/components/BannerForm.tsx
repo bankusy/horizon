@@ -41,13 +41,13 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
 
     setIsUploading(true);
     try {
-      // 1. Compression
+      // 1. Compression (배너 이미지 200kb 제한 최적화)
       const options = {
-        maxSizeMB: 5,
+        maxSizeMB: 0.2, // 5MB -> 200kb로 대폭 최적화
         maxWidthOrHeight: 2560,
         useWebWorker: true,
         fileType: "image/webp",
-        initialQuality: 0.85,
+        initialQuality: 0.8,
       };
       const compressedBlob = await imageCompression(file, options);
       const compressedFile = new File([compressedBlob], `banner_${Date.now()}.webp`, {
@@ -66,7 +66,18 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
         .from("images")
         .getPublicUrl(fileName);
 
-      // 3. Database Insert
+      // 3. Database Insert (새 배너를 가장 처음에 배치하기 위해 최솟값 순서 조회)
+      let minOrder = 0;
+      try {
+        const { data: minData } = await supabase
+          .from("banners")
+          .select("display_order")
+          .order("display_order", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (minData) minOrder = minData.display_order;
+      } catch (e) {}
+
       const { data: dbData, error: dbError } = await supabase
         .from("banners")
         .insert([
@@ -74,7 +85,7 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
             title,
             description,
             src: publicUrl,
-            display_order: 0,
+            display_order: minOrder - 1,
           },
         ])
         .select()

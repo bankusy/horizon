@@ -74,3 +74,4 @@ CREATE POLICY "Allow public read-only access for banners" ON banners FOR SELECT 
 CREATE POLICY "Allow all for authenticated users" ON gallery FOR ALL USING (true);
 CREATE POLICY "Allow all for authenticated users" ON banners FOR ALL USING (true);
 CREATE POLICY "Allow all for admin_users" ON admin_users FOR SELECT USING (true);
+

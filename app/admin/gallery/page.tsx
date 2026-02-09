@@ -28,6 +28,7 @@ export default function GalleryManagementPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("list");
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
+    const [selectedBannerIds, setSelectedBannerIds] = useState<string[]>([]);
     const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
 
     // Fetch images and banners from Supabase on mount
@@ -59,6 +60,7 @@ export default function GalleryManagementPage() {
                 const { data: bannerData, error: bannerError } = await supabase
                     .from("banners")
                     .select("*")
+                    .order("display_order", { ascending: true })
                     .order("created_at", { ascending: false });
 
                 if (bannerError) throw bannerError;
@@ -176,8 +178,80 @@ export default function GalleryManagementPage() {
         setBanners(prev => [newBanner, ...prev]);
     };
 
+    const handleBannerReorder = (newBanners: any[]) => {
+        // 즉시 로컬 UI 순서만 변경
+        const baseOrder = banners.length > 0 ? Math.min(...banners.map(b => b.display_order)) : 0;
+        const reordered = newBanners.map((b, index) => ({
+            ...b,
+            display_order: baseOrder + index
+        }));
+        setBanners(reordered);
+    };
+
+    const handleProcessBannerReorder = async () => {
+        if (!supabase || banners.length === 0) return;
+        try {
+            const updates = banners.map(b => 
+                supabase
+                    .from("banners")
+                    .update({ display_order: b.display_order })
+                    .eq("id", b.id)
+            );
+            await Promise.all(updates);
+            toast.success("배너 순서가 안전하게 저장되었습니다.");
+        } catch (error: any) {
+            console.error("Banner reorder save failed:", error);
+            toast.error("배너 순서 저장 중 오류가 발생했습니다.");
+        }
+    };
+
     const handleDeleteBanner = (id: string) => {
         setBanners(prev => prev.filter(b => b.id !== id));
+        setSelectedBannerIds(prev => prev.filter(selectedId => selectedId !== id));
+    };
+
+    const handleBannerBatchDelete = async () => {
+        if (!supabase || selectedBannerIds.length === 0) return;
+        if (!confirm(`선택한 ${selectedBannerIds.length}개의 배너를 삭제하시겠습니까?`)) return;
+
+        try {
+            // 1. Get storage paths
+            const { data: bannersToDelete } = await supabase
+                .from("banners")
+                .select("src")
+                .in("id", selectedBannerIds);
+
+            if (bannersToDelete && bannersToDelete.length > 0) {
+                const bucketPrefix = "/storage/v1/object/public/images/";
+                const filePaths = bannersToDelete
+                    .map((b: { src: string }) => {
+                        if (b.src && b.src.includes(bucketPrefix)) {
+                            return b.src.split(bucketPrefix)[1];
+                        }
+                        return null;
+                    })
+                    .filter(Boolean) as string[];
+
+                if (filePaths.length > 0) {
+                    await supabase.storage.from("images").remove(filePaths);
+                }
+            }
+
+            // 2. Delete from DB
+            const { error } = await supabase
+                .from("banners")
+                .delete()
+                .in("id", selectedBannerIds);
+
+            if (error) throw error;
+
+            setBanners(prev => prev.filter(b => !selectedBannerIds.includes(b.id)));
+            setSelectedBannerIds([]);
+            toast.success(`${selectedBannerIds.length}개의 배너가 삭제되었습니다.`);
+        } catch (error: any) {
+            console.error("Banner batch delete error:", error);
+            toast.error("배너 일괄 삭제에 실패했습니다.");
+        }
     };
 
     const handleUpdateImage = async (id: string | number, updates: { title: string; category: string; display_order: number }) => {
@@ -358,6 +432,25 @@ export default function GalleryManagementPage() {
                 </TabsContent>
 
                 <TabsContent value="banner" className="mt-0 focus-visible:outline-none w-full space-y-6">
+                    {selectedBannerIds.length > 0 && (
+                        <div className="mb-4 p-4 bg-muted border border-border rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-bold text-foreground">{selectedBannerIds.length}개 배너 선택됨</span>
+                                <Button variant="ghost" size="sm" onClick={() => setSelectedBannerIds([])} className="h-8 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                                    선택 해제
+                                </Button>
+                            </div>
+                            <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                onClick={handleBannerBatchDelete}
+                                className="h-8 rounded-lg font-bold text-[11px] uppercase tracking-wider"
+                            >
+                                <Trash2 size={14} className="mr-2" />
+                                선택 항목 삭제
+                            </Button>
+                        </div>
+                    )}
                     <Card className="rounded-xl border-border overflow-hidden">
                         <div className="p-6 border-b bg-muted/30">
                             <h3 className="text-lg font-bold">새 배너 등록</h3>
@@ -371,7 +464,14 @@ export default function GalleryManagementPage() {
                             <h3 className="text-xl font-black uppercase tracking-tight text-foreground">현재 배너 목록</h3>
                             <span className="px-2 py-0.5 rounded-full bg-secondary text-[10px] font-bold text-muted-foreground">{banners.length}</span>
                         </div>
-                        <BannerList banners={banners} onDelete={handleDeleteBanner} />
+                        <BannerList 
+                            banners={banners} 
+                            onDelete={handleDeleteBanner} 
+                            onReorder={handleBannerReorder}
+                            onReorderComplete={handleProcessBannerReorder}
+                            selectedIds={selectedBannerIds}
+                            onSelectionChange={setSelectedBannerIds}
+                        />
                     </div>
                 </TabsContent>
             </Tabs>
