@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { Toaster } from "@/components/ui/sonner";
-
+import { Analytics } from "@vercel/analytics/next"
 const pretendard = localFont({
   src: "../public/fonts/PretendardVariable.ttf",
   variable: "--font-pretendard",
@@ -23,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className={pretendard.variable} suppressHydrationWarning>
       <body className="antialiased min-h-screen bg-background text-foreground">
+        <Analytics/>
         <Providers>
           {children}
           <Toaster position="top-center" richColors />
