@@ -99,12 +99,14 @@ export default function GalleryManagementPage() {
                 .single();
 
             if (imgData?.src) {
-                // Extract file path from public URL
-                // Format: .../storage/v1/object/public/images/filename.webp
-                const urlParts = imgData.src.split("/storage/v1/object/public/images/");
-                if (urlParts.length > 1) {
-                    const filePath = urlParts[1];
-                    await supabase.storage.from("images").remove([filePath]);
+                // public URL에서 스토리지 상대 경로 추출
+                // 예: .../storage/v1/object/public/images/gallery/filename.webp -> gallery/filename.webp
+                const bucketPrefix = "/storage/v1/object/public/images/";
+                if (imgData.src.includes(bucketPrefix)) {
+                    const filePath = imgData.src.split(bucketPrefix)[1];
+                    if (filePath) {
+                        await supabase.storage.from("images").remove([filePath]);
+                    }
                 }
             }
 
@@ -138,10 +140,13 @@ export default function GalleryManagementPage() {
                 .in("id", selectedIds);
 
             if (imagesToDelete && imagesToDelete.length > 0) {
+                const bucketPrefix = "/storage/v1/object/public/images/";
                 const filePaths = imagesToDelete
                     .map((img: { src: string }) => {
-                        const urlParts = img.src.split("/storage/v1/object/public/images/");
-                        return urlParts.length > 1 ? urlParts[1] : null;
+                        if (img.src && img.src.includes(bucketPrefix)) {
+                            return img.src.split(bucketPrefix)[1];
+                        }
+                        return null;
                     })
                     .filter(Boolean) as string[];
 
