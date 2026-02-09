@@ -125,13 +125,13 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
       setUploads(prev => prev.map(u => u.id === item.id ? { ...u, status: "compressing" } : u));
 
       try {
-        // 1. WebP 압축
+        // 1. WebP 압축 (이미지당 200kb 제한 최적화)
         const compressionOptions = {
-          maxSizeMB: 1, // 3MB -> 1MB로 최적화
+          maxSizeMB: 0.2, // 1MB -> 200kb로 대폭 최적화
           maxWidthOrHeight: 1920,
           useWebWorker: true,
           fileType: "image/webp" as const,
-          initialQuality: 0.85,
+          initialQuality: 0.8,
         };
         const compressedFile = await imageCompression(item.file, compressionOptions);
 
