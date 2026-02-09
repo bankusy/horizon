@@ -22,11 +22,12 @@ import { Loader2, Save } from "lucide-react";
 interface EditImageDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (id: string | number, updates: { title: string; category: string }) => Promise<void>;
+    onSave: (id: string | number, updates: { title: string; category: string; display_order: number }) => Promise<void>;
     image: {
         id: string | number;
         alt: string;
         category: string;
+        display_order: number;
         src: string;
     } | null;
 }
@@ -39,12 +40,14 @@ export function EditImageDialog({
 }: EditImageDialogProps) {
     const [title, setTitle] = useState("");
     const [category, setCategory] = useState("");
+    const [displayOrder, setDisplayOrder] = useState<number>(0);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (image) {
             setTitle(image.alt);
             setCategory(image.category);
+            setDisplayOrder(image.display_order || 0);
         }
     }, [image]);
 
@@ -52,7 +55,7 @@ export function EditImageDialog({
         if (!image) return;
         setIsSaving(true);
         try {
-            await onSave(image.id, { title, category });
+            await onSave(image.id, { title, category, display_order: displayOrder });
             onClose();
         } catch (error) {
             console.error("Failed to save:", error);
@@ -100,6 +103,18 @@ export function EditImageDialog({
                                         <SelectItem value="Interior" className="rounded-lg">인테리어 (Interior)</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-muted-foreground uppercase opacity-40 tracking-[0.2em] ml-1">정렬 순서 (Order)</label>
+                                <Input
+                                    type="number"
+                                    value={displayOrder}
+                                    onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 0)}
+                                    className="h-10 rounded-lg border-zinc-200 focus:border-zinc-900 transition-all font-medium"
+                                    placeholder="0"
+                                />
+                                <p className="text-[9px] text-muted-foreground ml-1">숫자가 낮을수록 앞에 표시됩니다.</p>
                             </div>
                         </div>
                     </div>

@@ -21,12 +21,15 @@ interface PendingUpload {
   file: File;
   title: string;
   category: "Exterior" | "Interior";
+  videoUrl?: string; // 추가: 유튜브 링크
+  aspectRatio: number; // 추가: 이미지 비율 (가로/세로)
+  displayOrder: number; // 추가: 정렬 순서
   status: "pending" | "compressing" | "uploading" | "completed" | "error";
   error?: string;
   previewUrl: string;
 }
 
-export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: string; src: string; category: string }) => void }) {
+export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: string; src: string; category: string; video_url?: string; aspect_ratio: number; display_order: number }) => void }) {
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,16 +43,30 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
         toast.error("일부 파일이 이미지가 아니어서 제외되었습니다.");
       }
 
-      const newUploads: PendingUpload[] = validFiles.map(file => ({
-        id: Math.random().toString(36).substring(7),
-        file,
-        title: file.name.split('.').slice(0, -1).join('.') || "제목 없음",
-        category: "Exterior",
-        status: "pending",
-        previewUrl: URL.createObjectURL(file),
-      }));
+      const newUploadsPromises = validFiles.map(async file => {
+        // 이미지 비율 계산
+        const aspectRatio = await new Promise<number>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img.width / img.height);
+            img.onerror = () => resolve(1.0);
+            img.src = URL.createObjectURL(file);
+        });
 
-      setUploads(prev => [...prev, ...newUploads]);
+        return {
+            id: Math.random().toString(36).substring(7),
+            file,
+            title: file.name.split('.').slice(0, -1).join('.') || "제목 없음",
+            category: "Exterior" as const,
+            aspectRatio,
+            displayOrder: 0,
+            status: "pending" as const,
+            previewUrl: URL.createObjectURL(file),
+        };
+      });
+
+      Promise.all(newUploadsPromises).then(newUploads => {
+          setUploads(prev => [...prev, ...newUploads]);
+      });
       
       // Reset input so same file can be selected again if needed
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -64,7 +81,7 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
     });
   };
 
-  const updateMetadata = (id: string, updates: Partial<Pick<PendingUpload, "title" | "category">>) => {
+  const updateMetadata = (id: string, updates: Partial<Pick<PendingUpload, "title" | "category" | "videoUrl" | "displayOrder">>) => {
     setUploads(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
   };
 
@@ -83,14 +100,34 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
     setIsProcessing(true);
     const pendingItems = uploads.filter(u => u.status !== "completed");
 
+    // 최솟값 조회 로직 (가장 앞번호를 따기 위해)
+    let minOrder = 0;
+    try {
+        const { data: minOrderData, error: minOrderError } = await supabase
+            .from("gallery")
+            .select("display_order")
+            .order("display_order", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+        
+        if (!minOrderError && minOrderData) {
+            minOrder = minOrderData.display_order || 0;
+        }
+    } catch (e) {
+        console.error("Min order fetch failed:", e);
+    }
+
+    let currentOrder = minOrder;
+
     for (const item of pendingItems) {
+      currentOrder -= 1; // 낮은 숫자가 먼저 나오므로 최솟값에서 차감하여 앞으로 보냄
       // Update status to compressing
       setUploads(prev => prev.map(u => u.id === item.id ? { ...u, status: "compressing" } : u));
 
       try {
         // 1. WebP 압축
         const compressionOptions = {
-          maxSizeMB: 3,
+          maxSizeMB: 1, // 3MB -> 1MB로 최적화
           maxWidthOrHeight: 1920,
           useWebWorker: true,
           fileType: "image/webp" as const,
@@ -124,6 +161,9 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
               title: item.title,
               src: publicUrl,
               category: item.category,
+              video_url: item.videoUrl || null,
+              aspect_ratio: item.aspectRatio,
+              display_order: currentOrder, // 자동 부여된 순서 사용
             }
           ])
           .select()
@@ -138,6 +178,9 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
             title: dbData.title,
             src: dbData.src,
             category: dbData.category,
+            video_url: dbData.video_url,
+            aspect_ratio: dbData.aspect_ratio,
+            display_order: dbData.display_order,
           });
         }
 
@@ -240,6 +283,16 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
                           onChange={(e) => updateMetadata(u.id, { title: e.target.value })}
                           className="h-10 text-base rounded-lg border-zinc-200 focus:border-zinc-400 focus:ring-0 transition-all font-medium"
                           placeholder="작품 제목을 입력하세요"
+                          disabled={isProcessing || u.status === "completed"}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">유튜브 링크 (선택 사항)</label>
+                        <Input
+                          value={u.videoUrl || ""}
+                          onChange={(e) => updateMetadata(u.id, { videoUrl: e.target.value })}
+                          className="h-10 text-base rounded-lg border-zinc-200 focus:border-zinc-400 focus:ring-0 transition-all font-medium"
+                          placeholder="https://www.youtube.com/watch?v=..."
                           disabled={isProcessing || u.status === "completed"}
                         />
                       </div>

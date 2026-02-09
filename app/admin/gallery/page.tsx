@@ -19,6 +19,7 @@ interface GalleryImage {
     src: string;
     alt: string;
     category: string;
+    display_order: number;
 }
 
 export default function GalleryManagementPage() {
@@ -39,6 +40,7 @@ export default function GalleryManagementPage() {
                 const { data: imageData, error: imageError } = await supabase
                     .from("gallery")
                     .select("*")
+                    .order("display_order", { ascending: true })
                     .order("created_at", { ascending: false });
 
                 if (imageError) throw imageError;
@@ -47,7 +49,8 @@ export default function GalleryManagementPage() {
                     id: item.id,
                     src: item.src,
                     alt: item.title,
-                    category: item.category
+                    category: item.category,
+                    display_order: item.display_order
                 })) || [];
                 
                 setImages(formattedImages);
@@ -72,12 +75,13 @@ export default function GalleryManagementPage() {
         fetchData();
     }, []);
 
-    const handleAddImage = (newData: { id: string; title: string; src: string; category: string }) => {
-        const newImage = {
+    const handleAddImage = (newData: { id: string; title: string; src: string; category: string; video_url?: string; aspect_ratio: number; display_order: number }) => {
+        const newImage: GalleryImage = {
             id: newData.id,
             alt: newData.title,
             src: newData.src,
-            category: newData.category
+            category: newData.category,
+            display_order: newData.display_order
         };
         setImages(prev => [newImage, ...prev]);
         // Note: Removed setActiveTab("list") to allow bulk upload to finish in current tab
@@ -171,28 +175,95 @@ export default function GalleryManagementPage() {
         setBanners(prev => prev.filter(b => b.id !== id));
     };
 
-    const handleUpdateImage = async (id: string | number, updates: { title: string; category: string }) => {
+    const handleUpdateImage = async (id: string | number, updates: { title: string; category: string; display_order: number }) => {
         if (!supabase) return;
-
         try {
-            const { error } = await supabase
-                .from("gallery")
-                .update({
-                    title: updates.title,
-                    category: updates.category
-                })
-                .eq("id", id);
+            // 1. 순서 맞교환(Swap) 로직 확인
+            const targetOrder = updates.display_order;
+            const existingImageWithOrder = images.find(img => img.display_order === targetOrder && img.id !== id);
+            const currentImage = images.find(img => img.id === id);
 
-            if (error) throw error;
+            if (existingImageWithOrder && currentImage) {
+                // 이미 해당 순서를 가진 이미지가 있다면 서로 순서를 맞바꿉니다.
+                const oldOrder = currentImage.display_order;
 
-            setImages(prev => prev.map(img => 
-                img.id === id ? { ...img, alt: updates.title, category: updates.category } : img
-            ));
-            toast.success("정보가 성공적으로 수정되었습니다.");
+                // DB 업데이트 (두 항목 모두)
+                const { error: swapError1 } = await supabase
+                    .from("gallery")
+                    .update({ display_order: targetOrder, title: updates.title, category: updates.category })
+                    .eq("id", id);
+                
+                const { error: swapError2 } = await supabase
+                    .from("gallery")
+                    .update({ display_order: oldOrder })
+                    .eq("id", existingImageWithOrder.id);
+
+                if (swapError1 || swapError2) throw swapError1 || swapError2;
+
+                // 로컬 상태 업데이트
+                setImages(prev => prev.map(img => {
+                    if (img.id === id) return { ...img, alt: updates.title, category: updates.category, display_order: targetOrder };
+                    if (img.id === existingImageWithOrder.id) return { ...img, display_order: oldOrder };
+                    return img;
+                }).sort((a, b) => a.display_order - b.display_order));
+                
+                toast.success(`순서가 ${existingImageWithOrder.alt} 항목과 맞교환되었습니다.`);
+            } else {
+                // 일반적인 단독 수정
+                const { error } = await supabase
+                    .from("gallery")
+                    .update({
+                        title: updates.title,
+                        category: updates.category,
+                        display_order: updates.display_order
+                    })
+                    .eq("id", id);
+                if (error) throw error;
+                
+                setImages(prev => prev.map(img => 
+                    img.id === id ? { ...img, alt: updates.title, category: updates.category, display_order: updates.display_order } : img
+                ).sort((a, b) => a.display_order - b.display_order));
+                
+                toast.success("정보가 성공적으로 수정되었습니다.");
+            }
         } catch (error: any) {
             console.error("Update error:", error);
             toast.error("수정에 실패했습니다.");
             throw error;
+        }
+    };
+
+    const handleReorder = (newImages: GalleryImage[]) => {
+        // 즉시 로컬 UI 순서만 변경 (DB 업데이트는 하지 않음)
+        // 새로운 인덱스 순서대로 display_order 값을 임시로 재할당하여 UI에 반영합니다.
+        const baseOrder = images.length > 0 ? Math.min(...images.map(img => img.display_order)) : 0;
+        
+        const reorderedImages = newImages.map((img, index) => ({
+            ...img,
+            display_order: baseOrder + index
+        }));
+
+        setImages(reorderedImages);
+    };
+
+    const handleProcessReorder = async () => {
+        // 드래그가 완전히 끝난 시점에만 호출되어 DB에 한 번만 저장합니다.
+        if (!supabase || images.length === 0) return;
+
+        try {
+            // 현재 images 상태는 handleReorder에 의해 이미 최신 순서로 정렬되어 있습니다.
+            const updates = images.map(img => 
+                supabase
+                    .from("gallery")
+                    .update({ display_order: img.display_order })
+                    .eq("id", img.id)
+            );
+            
+            await Promise.all(updates);
+            toast.success("전체 순서가 안전하게 저장되었습니다.");
+        } catch (error: any) {
+            console.error("Reorder save failed:", error);
+            toast.error("이미지 순서 저장 중 오류가 발생했습니다.");
         }
     };
 
@@ -266,6 +337,8 @@ export default function GalleryManagementPage() {
                                 images={images} 
                                 onDelete={handleDeleteImage}
                                 onEdit={setEditingImage}
+                                onReorder={handleReorder}
+                                onReorderComplete={handleProcessReorder}
                                 selectedIds={selectedIds}
                                 onSelectionChange={setSelectedIds}
                             />

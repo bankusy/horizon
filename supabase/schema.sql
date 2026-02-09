@@ -5,7 +5,10 @@ create table public.gallery (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   title text not null,
   src text not null,
-  category text not null
+  category text not null,
+  video_url text, -- 유튜브 등 영상 URL (선택 사항)
+  aspect_ratio float default 1.0, -- 이미지 가로/세로 비율 추가
+  display_order integer default 0 -- 정렬 순서 (숫자가 클수록 혹은 작을수록 먼저 나오게 설정 가능)
 );
 
 -- 2. 스토리지 버킷 생성
