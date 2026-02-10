@@ -554,7 +554,7 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                     <iframe
                                                         width="100%"
                                                         height="100%"
-                                                        src={`https://www.youtube.com/embed/${getYoutubeId(displayImages[lightboxIndex].video_url!)}?autoplay=1&controls=0&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&showinfo=0&mute=0&vq=hd1080`}
+                                                        src={`https://www.youtube.com/embed/${getYoutubeId(displayImages[lightboxIndex].video_url!)}?autoplay=1&controls=1&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&showinfo=0&mute=0&vq=hd1080&playsinline=1`}
                                                         title="YouTube video player"
                                                         frameBorder="0"
                                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -562,8 +562,6 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                         className="w-full h-full scale-[1.3] origin-center"
                                                     />
                                                 </div>
-                                                {/* Transparent Interaction Overlay (Tailwind implementation) */}
-                                                <div className="absolute inset-0 z-10 bg-transparent cursor-default" />
                                             </div>
                                         ) : (
                                             <Image

@@ -99,7 +99,7 @@ export default function GalleryManagementPage() {
                 const { data: bannerData, error: bannerError } = await supabase
                     .from("banners")
                     .select("*")
-                    .order("display_order", { ascending: false }) // 역순(최신순/높은번호순) 정렬
+                    .order("display_order", { ascending: true }) // 정순(1번부터) 정렬
                     .order("created_at", { ascending: false });
 
                 if (bannerError) throw bannerError;
@@ -402,11 +402,7 @@ export default function GalleryManagementPage() {
     const handleBannerOrderUpdate = async (id: string, newOrder: number) => {
         if (!supabase) return;
 
-        if (newOrder < 0) { // Banners might be 0-indexed or 1-indexed, let's assume 0 based on previous code or just check bounds
-             // Previous code: baseOrder + index. Let's assume strict simple ordering 1..N for simplicity or just relative.
-             // BannerList uses index 0..N. Let's check bounds carefully.
-             // Wait, previous code `banner.display_order` was used.
-             // Let's assume 1-based for consistency with UI "ORDER #1".
+        if (newOrder < 1) { 
              toast.error("유효하지 않은 순서입니다.");
              return;
         }
@@ -438,7 +434,7 @@ export default function GalleryManagementPage() {
                     if (b.id === id) return { ...b, display_order: newOrder };
                     if (b.id === targetBanner.id) return { ...b, display_order: currentBanner.display_order };
                     return b;
-                }).sort((a, b) => b.display_order - a.display_order)); // 내림차순 정렬
+                }).sort((a, b) => a.display_order - b.display_order)); // 오름차순 정렬
                 
                 toast.success("배너 순서가 변경되었습니다.");
             } else {
@@ -451,7 +447,7 @@ export default function GalleryManagementPage() {
 
                 setBanners(prev => prev.map(b => 
                     b.id === id ? { ...b, display_order: newOrder } : b
-                ).sort((a, b) => b.display_order - a.display_order)); // 내림차순 정렬
+                ).sort((a, b) => a.display_order - b.display_order)); // 오름차순 정렬
                 toast.success("배너 순서가 변경되었습니다.");
             }
         } catch (error) {

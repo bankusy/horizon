@@ -13,7 +13,7 @@ async function getInitialData() {
     const { data: bannerData } = await supabase
         .from("banners")
         .select("*")
-        .order("display_order", { ascending: false })
+        .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
 
     // 2. 초기 갤러리 이미지 데이터 페칭 (첫 50개)
