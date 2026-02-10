@@ -9,12 +9,12 @@ export default function ContactPage() {
     const contactInfo = [
         {
             label: "Chief Executive Officer",
-            value: "JEONG WON SIK",
+            value: "Jeong Won Sik",
             link: null,
         },
         {
             label: "Direct Line",
-            value: "+82 10 - 3500 - 7742",
+            value: "010-3500-7742",
             link: "tel:+821035007742",
         },
         {
@@ -33,23 +33,23 @@ export default function ContactPage() {
                     <div className="flex flex-col gap-24 md:gap-40">
                         {/* Title Section */}
                         <section className="relative">
-                            <span className="text-[10px] md:text-xs font-bold tracking-[1em] uppercase opacity-40 mb-8 block">
+                            <span className="text-[10px] md:text-xs font-light tracking-[1em] uppercase opacity-40 mb-8 block">
                                 Get in touch
                             </span>
-                            <h1 className="text-6xl md:text-9xl font-black tracking-tighter uppercase leading-[0.85] flex flex-col">
+                            <h1 className="text-6xl md:text-9xl font-light tracking-tighter uppercase leading-[0.85] flex flex-col">
                                 <BlurText
                                     text="CONNECT"
                                     delay={200}
                                     animateBy="words"
                                     direction="top"
-                                    className="text-6xl md:text-9xl font-black text-[#95CA68]"
+                                    className="text-6xl md:text-9xl font-light text-brand"
                                 />
                                 <BlurText
                                     text="STREAMS"
                                     delay={400}
                                     animateBy="words"
                                     direction="top"
-                                    className="text-6xl md:text-9xl font-black opacity-20"
+                                    className="text-6xl md:text-9xl font-light opacity-20"
                                 />
                             </h1>
                         </section>
@@ -83,20 +83,20 @@ export default function ContactPage() {
                                         {info.link ? (
                                             <a 
                                                 href={info.link}
-                                                className="flex flex-col p-8 md:p-12 bg-muted/20 border border-transparent hover:border-border/50 transition-all duration-500 rounded-2xl md:rounded-3xl hover:bg-muted/30"
+                                                className="flex flex-col p-8 md:p-12 bg-muted/20 border border-transparent hover:border-brand/20 transition-all duration-500 hover:bg-brand/5 group/card"
                                             >
                                                 <div className="flex justify-between items-start mb-4">
                                                     <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase opacity-40">
                                                         {info.label}
                                                     </span>
-                                                    <ArrowUpRight className="w-5 h-5 opacity-0 group-hover:opacity-40 transition-opacity" />
+                                                    <ArrowUpRight className="w-5 h-5 opacity-0 group-hover/card:opacity-100 group-hover/card:text-brand transition-all duration-500" />
                                                 </div>
-                                                <span className="text-xl md:text-3xl font-medium tracking-tight">
+                                                <span className="text-xl md:text-3xl font-medium tracking-tight group-hover/card:text-brand transition-colors duration-500">
                                                     {info.value}
                                                 </span>
                                             </a>
                                         ) : (
-                                            <div className="flex flex-col p-8 md:p-12 border border-border/20 rounded-2xl md:rounded-3xl">
+                                            <div className="flex flex-col p-8 md:p-12 border border-border/20">
                                                 <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase opacity-40 mb-4">
                                                     {info.label}
                                                 </span>

@@ -1,25 +1,26 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2, ExternalLink, Image as ImageIcon, Edit2, GripVertical } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trash2, ExternalLink, Image as ImageIcon, Edit2, ChevronUp, ChevronDown, Play } from "lucide-react";
 import Image from "next/image";
-import { Reorder, useDragControls } from "framer-motion";
+import React, { useState, useEffect } from "react";
 
 interface GalleryImage {
     id: string | number;
     src: string;
     alt: string;
-    category: string;
+    category_id: string;
+    category_name?: string;
     display_order: number;
+    type?: string;
+    video_url?: string;
 }
 
 interface ImageListProps {
     images: GalleryImage[];
     onDelete?: (id: string | number) => void;
     onEdit?: (image: GalleryImage) => void;
-    onReorder?: (newImages: GalleryImage[]) => void;
-    onReorderComplete?: () => void;
+    onUpdateOrder?: (id: string | number, newOrder: number) => void;
     selectedIds: (string | number)[];
     onSelectionChange: (ids: (string | number)[]) => void;
 }
@@ -28,8 +29,7 @@ export function ImageList({
     images,
     onDelete,
     onEdit,
-    onReorder,
-    onReorderComplete,
+    onUpdateOrder,
     selectedIds,
     onSelectionChange,
 }: ImageListProps) {
@@ -55,58 +55,60 @@ export function ImageList({
     };
 
     return (
-        <div className="w-full space-y-4">
-            {/* Header / Toolbar */}
-            <div className="flex items-center justify-between px-6 py-3 bg-zinc-50 border border-border rounded-xl">
+        <div className="w-full space-y-6">
+            <div className="flex items-center justify-between px-8 py-6 bg-card border border-border rounded-none select-none mb-8">
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center h-5">
-                        <input
-                            type="checkbox"
-                            checked={isAllSelected}
-                            ref={(el) => {
-                                if (el) el.indeterminate = isPartialSelected;
-                            }}
-                            onChange={handleSelectAll}
-                            className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 cursor-pointer"
-                        />
-                    </div>
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                        전체 선택 ({images.length})
-                    </span>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative flex items-center justify-center">
+                            <input
+                                type="checkbox"
+                                checked={isAllSelected}
+                                ref={(el) => {
+                                    if (el) el.indeterminate = isPartialSelected;
+                                }}
+                                onChange={handleSelectAll}
+                                className="peer appearance-none w-5 h-5 rounded-none border border-input bg-background checked:bg-primary checked:border-primary transition-all duration-300"
+                            />
+                            <div className="absolute opacity-0 peer-checked:opacity-100 text-primary-foreground pointer-events-none transition-opacity duration-300">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                        </div>
+                        <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors uppercase tracking-widest">
+                            {isAllSelected ? "선택 해제" : `전체 선택 (${images.length})`}
+                        </span>
+                    </label>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tight bg-white px-3 py-1 rounded-full border border-border shadow-sm">
-                    <GripVertical size={12} />
-                    핸들을 드래그하여 순서 변경
+                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tight bg-secondary/50 border border-border px-4 py-1.5 rounded-none">
+                    <span>순서 변경: 입력 또는 화살표 사용</span>
                 </div>
             </div>
 
-            <Reorder.Group 
-                as="div" 
-                axis="y" 
-                values={images} 
-                onReorder={onReorder || (() => {})}
-                onDragEnd={onReorderComplete}
-                className="flex flex-col gap-3 p-4 bg-zinc-50/30 rounded-xl"
-            >
-                {images.map((img) => {
+            <div className="flex flex-col gap-4 p-1">
+                {images.map((img, index) => {
                     const isSelected = selectedIds.includes(img.id);
+                    const isFirst = index === 0;
+                    const isLast = index === images.length - 1;
+
                     return (
-                        <ReorderRow 
+                        <ImageCard 
                             key={img.id}
                             img={img}
                             isSelected={isSelected}
                             onSelectOne={handleSelectOne}
                             onEdit={onEdit}
                             onDelete={onDelete}
+                            onUpdateOrder={onUpdateOrder}
+                            isFirst={isFirst}
+                            isLast={isLast}
                         />
                     );
                 })}
-            </Reorder.Group>
+            </div>
 
             {images.length === 0 && (
-                <div className="py-20 flex flex-col items-center justify-center text-muted-foreground bg-zinc-50/20">
-                    <ImageIcon size={40} className="mb-4 opacity-20" />
-                    <p className="text-xs font-semibold uppercase tracking-widest">
+                <div className="py-32 flex flex-col items-center justify-center text-muted-foreground bg-secondary/20 border border-dashed border-border">
+                    <ImageIcon size={48} className="mb-4 opacity-10" />
+                    <p className="text-xs font-bold uppercase tracking-[0.3em] opacity-30">
                         아카이브가 비어 있습니다
                     </p>
                 </div>
@@ -114,111 +116,148 @@ export function ImageList({
         </div>
     );
 }
-interface ReorderRowProps {
+
+interface ImageCardProps {
     img: GalleryImage;
     isSelected: boolean;
     onSelectOne: (id: string | number) => void;
     onEdit?: (image: GalleryImage) => void;
     onDelete?: (id: string | number) => void;
+    onUpdateOrder?: (id: string | number, newOrder: number) => void;
+    isFirst: boolean;
+    isLast: boolean;
 }
 
-function ReorderRow({ img, isSelected, onSelectOne, onEdit, onDelete }: ReorderRowProps) {
-    const controls = useDragControls();
+function ImageCard({ img, isSelected, onSelectOne, onEdit, onDelete, onUpdateOrder, isFirst, isLast }: ImageCardProps) {
+    const [orderInput, setOrderInput] = useState(String(img.display_order));
+
+    useEffect(() => {
+        setOrderInput(String(img.display_order));
+    }, [img.display_order]);
+
+    const handleOrderBlur = () => {
+        const newOrder = parseInt(orderInput, 10);
+        if (!isNaN(newOrder) && newOrder !== img.display_order && onUpdateOrder) {
+            onUpdateOrder(img.id, newOrder);
+        } else {
+            setOrderInput(String(img.display_order));
+        }
+    };
+
+    const handleOrderKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleOrderBlur();
+        }
+    };
 
     return (
-        <Reorder.Item
-            value={img}
-            id={String(img.id)}
-            dragListener={false}
-            dragControls={controls}
-            as="div"
-            layout
-            initial={false}
-            animate={{ 
-                scale: 1, 
-                boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-                zIndex: 1,
-                backgroundColor: isSelected ? "rgb(244 244 245 / 0.5)" : "white"
-            }}
-            whileDrag={{ 
-                scale: 1.02,
-                boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
-                zIndex: 50,
-                backgroundColor: "white",
-            }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className={`flex items-center gap-4 p-3 rounded-xl border border-border shadow-sm group transition-colors hover:border-zinc-300 ${isSelected ? "border-zinc-900" : ""}`}
+        <div
+            className={`flex flex-col md:flex-row items-center gap-6 p-4 bg-card border rounded-none group transition-all duration-300 ${
+                isSelected ? "border-primary bg-muted/30" : "border-border hover:border-primary/20 hover:bg-secondary/30"
+            }`}
         >
-            <div 
-                className="cursor-grab active:cursor-grabbing p-2 hover:bg-zinc-100 rounded-lg transition-colors shrink-0"
-                onPointerDown={(e) => controls.start(e)}
-            >
-                <GripVertical size={18} className="text-zinc-400" />
+            {/* Left: Hybrid Ordering Controls & Checkbox */}
+            <div className="flex items-center gap-4 shrink-0">
+                <div className="flex flex-col items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-none text-muted-foreground hover:text-primary disabled:opacity-20"
+                        disabled={isFirst}
+                        onClick={() => onUpdateOrder?.(img.id, img.display_order - 1)}
+                    >
+                        <ChevronUp size={14} />
+                    </Button>
+                    <div className="relative w-12">
+                         <Input
+                            className="h-7 text-center p-0 text-xs font-bold rounded-none border-border focus:border-primary bg-background"
+                            value={orderInput}
+                            onChange={(e) => setOrderInput(e.target.value)}
+                            onBlur={handleOrderBlur}
+                            onKeyDown={handleOrderKeyDown}
+                        />
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-none text-muted-foreground hover:text-primary disabled:opacity-20"
+                        disabled={isLast}
+                        onClick={() => onUpdateOrder?.(img.id, img.display_order + 1)}
+                    >
+                        <ChevronDown size={14} />
+                    </Button>
+                </div>
+                
+                <div className="relative flex items-center justify-center pl-2">
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => onSelectOne(img.id)}
+                        className="peer appearance-none w-5 h-5 border border-input bg-background checked:bg-primary checked:border-primary transition-all duration-300 cursor-pointer"
+                    />
+                    <div className="absolute left-2 opacity-0 peer-checked:opacity-100 text-primary-foreground pointer-events-none transition-opacity duration-300">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                </div>
             </div>
 
-            <div className="flex items-center shrink-0">
-                <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => onSelectOne(img.id)}
-                    className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
-                />
-            </div>
-
-            <div className="relative w-14 h-14 overflow-hidden rounded-lg bg-zinc-100 border border-border shrink-0">
+            {/* Middle Left: Thumbnail */}
+            <div className="relative w-32 h-20 md:w-40 md:h-24 bg-muted overflow-hidden shrink-0 border border-border">
                 <Image
                     src={img.src}
                     alt={img.alt}
                     fill
-                    className="object-cover"
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
+                
+                {/* Video Indicator */}
+                {(img.type === 'video' || img.video_url) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                        <Play fill="currentColor" size={16} className="text-white" />
+                    </div>
+                )}
             </div>
 
-            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                <span className="text-sm font-bold text-zinc-900 truncate">
-                    {img.alt}
-                </span>
-                <div className="flex items-center gap-2">
-                    <Badge
-                        variant="secondary"
-                        className="rounded-md font-bold text-[9px] px-1.5 py-0 border-border uppercase bg-zinc-100/50"
-                    >
-                        {img.category}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter tabular-nums">
-                        #{img.display_order} • ID: {img.id}
+            {/* Middle Right: Information */}
+            <div className="flex-1 min-w-0 flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                    <p className="text-2xl font-black tracking-tight uppercase truncate group-hover:text-primary transition-colors leading-[1.1]">
+                        {img.alt || "No Title"}
+                    </p>
+                    {img.category_name && (
+                        <span className="px-3 py-1 bg-secondary text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground border border-border leading-none">
+                            {img.category_name}
+                        </span>
+                    )}
+                </div>
+                <div className="flex items-center gap-4">
+                    <span className="w-1.5 h-1.5 rounded-none bg-border" />
+                    <span className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/20 truncate">
+                        ID: {img.id}
                     </span>
                 </div>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-500">
                 <Button
                     variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-lg hover:bg-white border border-transparent hover:border-border"
+                    size="sm"
+                    className="h-10 rounded-none bg-muted/50 hover:bg-primary hover:text-primary-foreground border border-transparent"
                     onClick={() => onEdit?.(img)}
                 >
-                    <Edit2 size={14} className="text-zinc-500" />
+                    <Edit2 size={14} className="mr-2" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">수정</span>
                 </Button>
                 <Button
                     variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-lg hover:bg-white border border-transparent hover:border-border"
-                    asChild
-                >
-                    <a href={img.src} target="_blank" rel="noreferrer">
-                        <ExternalLink size={14} className="text-zinc-500" />
-                    </a>
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-lg text-destructive hover:text-white hover:bg-destructive border border-transparent hover:border-destructive"
+                    size="sm"
+                    className="h-10 w-10 p-0 rounded-none bg-muted/50 text-destructive hover:bg-destructive hover:text-destructive-foreground border border-transparent"
                     onClick={() => onDelete?.(img.id)}
                 >
-                    <Trash2 size={14} />
+                    <Trash2 size={16} />
                 </Button>
             </div>
-        </Reorder.Item>
+        </div>
     );
 }

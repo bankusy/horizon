@@ -7,21 +7,31 @@ import {
     ChevronLeft,
     ChevronRight,
     Maximize2,
-    Pause,
-    Play,
     Share2,
     X,
     Loader2,
+    Play,
+    Filter,
+    Pause,
 } from "lucide-react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
+interface Category {
+    id: string;
+    name: string;
+}
+
 interface GalleryImage {
-    id: string | number;
+    id: string;
     src: string;
     alt: string;
-    category: string;
+    category_id: string;
+    category_name?: string;
+    type?: string;
     video_url?: string;
+    width?: number;
+    height?: number;
     aspect_ratio?: number;
     display_order?: number;
 }
@@ -34,7 +44,8 @@ interface GalleryViewProps {
 // Real Supabase Data Fetching
 const fetchGalleryPage = async ({
     pageParam = 0,
-    category = "All",
+    categoryId = "All",
+    categoriesMap = {} as Record<string, string>,
 }): Promise<{ images: GalleryImage[]; nextCursor: number | null }> => {
     if (!supabase) return { images: [], nextCursor: null };
 
@@ -49,8 +60,8 @@ const fetchGalleryPage = async ({
         .order("created_at", { ascending: false })
         .range(from, to);
 
-    if (category !== "All") {
-        query = query.eq("category", category);
+    if (categoryId !== "All") {
+        query = query.eq("category_id", categoryId);
     }
 
     const { data, error, count } = await query;
@@ -61,14 +72,21 @@ const fetchGalleryPage = async ({
     }
 
     const images =
-        data?.map((item: any) => ({
-            id: item.id,
-            src: item.src,
-            alt: item.title,
-            category: item.category,
-            video_url: item.video_url,
-            aspect_ratio: item.aspect_ratio || 1,
-        })) || [];
+        data?.map((item: any) => {
+            return {
+                id: item.id,
+                src: item.src,
+                alt: item.title,
+                category_id: item.category_id,
+                category_name: categoriesMap[item.category_id] || "Uncategorized",
+                type: item.type,
+                video_url: item.video_url,
+                width: item.width,
+                height: item.height,
+                aspect_ratio: item.aspect_ratio,
+                display_order: item.display_order,
+            };
+        }) || [];
 
     const hasNext = count ? from + itemsPerPage < count : false;
 
@@ -87,20 +105,40 @@ const getYoutubeId = (url: string) => {
 };
 
 export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
-    const [selectedCategory, setSelectedCategory] = useState("All");
+    const [selectedCategoryId, setSelectedCategoryId] = useState("All");
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [categoriesMap, setCategoriesMap] = useState<Record<string, string>>({});
+
+    // 카테고리 목록 로드
+    useEffect(() => {
+        async function fetchCategories() {
+            if (!supabase) return;
+            const { data } = await supabase
+                .from("categories")
+                .select("id, name")
+                .order("display_order", { ascending: true });
+            if (data) {
+                setCategories(data);
+                const map: Record<string, string> = {};
+                data.forEach((c: Category) => { map[c.id] = c.name; });
+                setCategoriesMap(map);
+            }
+        }
+        fetchCategories();
+    }, []);
 
     // React Query for professional caching & state management
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
         useInfiniteQuery({
-            queryKey: ["gallery", selectedCategory],
+            queryKey: ["gallery", selectedCategoryId, categoriesMap],
             queryFn: ({ pageParam }) =>
-                fetchGalleryPage({ pageParam, category: selectedCategory }),
+                fetchGalleryPage({ pageParam, categoryId: selectedCategoryId, categoriesMap }),
             initialPageParam: 0,
             getNextPageParam: (lastPage) => lastPage.nextCursor,
             staleTime: 1000 * 60 * 10, // Cache for 10 minutes
-            initialData: selectedCategory === "All" ? {
+            initialData: selectedCategoryId === "All" && Object.keys(categoriesMap).length === 0 ? {
                 pages: [{ images: initialImages, nextCursor }],
                 pageParams: [0],
             } : undefined,
@@ -110,22 +148,49 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
         return data?.pages.flatMap((page) => page.images) ?? [];
     }, [data]);
 
-    // Column count based on screen size
+    // Column count based on screen size and site settings
     const [columnCount, setColumnCount] = useState(1);
+    const [columnSettings, setColumnSettings] = useState({
+        mobile: 1,
+        tablet: 2,
+        desktop: 4,
+        wide: 5,
+    });
+
+    // 그리드 설정 로드
+    useEffect(() => {
+        async function loadColumnSettings() {
+            if (!supabase) return;
+            try {
+                const { data } = await supabase
+                    .from("site_settings")
+                    .select("value")
+                    .eq("key", "gallery_columns")
+                    .single();
+                
+                if (data?.value) {
+                    setColumnSettings(data.value);
+                }
+            } catch (e) {
+                console.error("Column settings load failed:", e);
+            }
+        }
+        loadColumnSettings();
+    }, []);
 
     useEffect(() => {
         const updateColumns = () => {
             const width = window.innerWidth;
-            if (width >= 1536) setColumnCount(5);
-            else if (width >= 1280) setColumnCount(4);
-            else if (width >= 1024) setColumnCount(3);
-            else if (width >= 640) setColumnCount(2);
-            else setColumnCount(1);
+            if (width >= 1536) setColumnCount(columnSettings.wide);
+            else if (width >= 1280) setColumnCount(columnSettings.desktop);
+            else if (width >= 1024) setColumnCount(Math.max(columnSettings.tablet, 2));
+            else if (width >= 640) setColumnCount(columnSettings.tablet);
+            else setColumnCount(columnSettings.mobile);
         };
         updateColumns();
         window.addEventListener("resize", updateColumns);
         return () => window.removeEventListener("resize", updateColumns);
-    }, []);
+    }, [columnSettings]);
 
     // Distribute images into columns (Shortest column first logic)
     const groupedColumns = useMemo(() => {
@@ -226,25 +291,40 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
             <section>
                 <div className="flex flex-col xl:flex-row xl:items-end justify-between mb-12 md:mb-20 gap-8">
                     <div className="border-l-8 border-foreground pl-6 md:pl-10">
-                        <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-4 uppercase leading-none">
+                        <h2 className="text-5xl md:text-8xl font-light tracking-tighter mb-4 uppercase leading-none">
                             Archive
                         </h2>
                         <p className="text-xs md:text-sm font-bold tracking-[0.3em] text-muted-foreground uppercase opacity-50">
                             Precision • Aesthetics • Innovation
                         </p>
                     </div>
-                    <div className="flex flex-nowrap gap-2 min-[400px]:gap-3 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 md:mx-0 md:px-0">
-                        {["All", "Exterior", "Interior"].map((cat) => (
+                    <div className="flex flex-nowrap gap-2 md:gap-4 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 md:mx-0 md:px-0 items-center">
+                        <div className="flex items-center gap-2 mr-2 shrink-0">
+                            <Filter size={14} className="opacity-40" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-20">Filter By</span>
+                        </div>
+                        <button
+                            key="All"
+                            onClick={() => setSelectedCategoryId("All")}
+                            className={`px-4 md:px-6 py-2 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full transition-all duration-700 flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                                selectedCategoryId === "All"
+                                    ? "bg-foreground text-background shadow-2xl shadow-foreground/20"
+                                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            }`}
+                        >
+                            All
+                        </button>
+                        {categories.map((cat) => (
                             <button
-                                key={cat}
-                                onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 min-[400px]:px-6 py-2.5 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full transition-all duration-700 flex items-center gap-2 whitespace-nowrap shrink-0 ${
-                                    selectedCategory === cat
-                                        ? "bg-foreground text-background"
-                                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                key={cat.id}
+                                onClick={() => setSelectedCategoryId(cat.id)}
+                                className={`px-4 md:px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-500 whitespace-nowrap ${
+                                    selectedCategoryId === cat.id
+                                        ? "bg-foreground text-background shadow-2xl shadow-foreground/20"
+                                        : "bg-muted/50 text-muted-foreground hover:bg-muted"
                                 }`}
                             >
-                                {cat}
+                                {cat.name}
                             </button>
                         ))}
                     </div>
@@ -252,14 +332,19 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
 
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={selectedCategory}
+                        key={selectedCategoryId}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                     >
                         {displayImages.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-10">
+                            <div 
+                                className="grid gap-4 md:gap-10"
+                                style={{ 
+                                    gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` 
+                                }}
+                            >
                                 {groupedColumns.map((col, colIdx) => (
                                     <div key={colIdx} className="flex flex-col gap-4 md:gap-10">
                                         {col.map((img) => {
@@ -282,54 +367,49 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                         setLightboxIndex(globalIdx);
                                                         setIsAutoPlaying(false);
                                                     }}
-                                                    className="group relative w-full overflow-hidden bg-zinc-100 transition-all duration-500 md:hover:shadow-xl md:hover:shadow-black/10 cursor-zoom-in rounded-xl"
+                                                    className="group relative w-full overflow-hidden bg-zinc-100 transition-all duration-500 md:hover:shadow-xl md:hover:shadow-black/10 cursor-zoom-in"
                                                 >
-                                                    <Image
-                                                        width={800}
-                                                        height={800 / (img.aspect_ratio || 1)}
-                                                        className="w-full h-auto block transition-transform duration-3000 ease-out group-hover:scale-110"
-                                                        style={{ 
-                                                            aspectRatio: img.aspect_ratio ? `${img.aspect_ratio}` : 'auto'
-                                                        }}
-                                                        src={img.src}
-                                                        alt={img.alt}
-                                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
-                                                        priority={globalIdx < 6}
-                                                    />
-
-                                                    {img.video_url && (
-                                                        <div className="absolute inset-0 flex items-center justify-center z-10">
-                                                            <div className="p-4 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white">
-                                                                <Play fill="currentColor" size={24} />
+                                                    {(img.type === 'video' || img.video_url) ? (
+                                                        <div 
+                                                            className="relative w-full overflow-hidden bg-black"
+                                                            style={{ 
+                                                                aspectRatio: img.aspect_ratio ? `${img.aspect_ratio}` : '16/9'
+                                                            }}
+                                                        >
+                                                            <div className="absolute inset-0 z-0 pointer-events-none">
+                                                                <iframe
+                                                                    width="100%"
+                                                                    height="100%"
+                                                                    src={`https://www.youtube.com/embed/${getYoutubeId(img.video_url!)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYoutubeId(img.video_url!)}&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0`}
+                                                                    title="YouTube grid player"
+                                                                    frameBorder="0"
+                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                    className="w-full h-full scale-150 pointer-events-none"
+                                                                />
                                                             </div>
+                                                            {/* Transparent Overlay to block interaction on grid */}
+                                                            <div className="absolute inset-0 z-10 bg-transparent" />
                                                         </div>
+                                                    ) : (
+                                                        <Image
+                                                            width={800}
+                                                            height={800 / (img.aspect_ratio || 1)}
+                                                            className="w-full h-auto block transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-110"
+                                                            style={{ 
+                                                                aspectRatio: img.aspect_ratio ? `${img.aspect_ratio}` : 'auto'
+                                                            }}
+                                                            src={img.src}
+                                                            alt={img.alt}
+                                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
+                                                            priority={globalIdx < 6}
+                                                        />
                                                     )}
 
-                                                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/0 to-transparent opacity-0 md:group-hover:opacity-100 transition-all duration-500">
-                                                        <div className="absolute top-6 right-6 flex gap-3 translate-y-2 group-hover:translate-y-0 transition-all duration-500 opacity-0 group-hover:opacity-100">
-                                                            <button className="p-3 rounded-full bg-white/10 backdrop-blur-xl text-white hover:bg-white/30 transition-all border border-white/20">
-                                                                <Share2 size={18} />
-                                                            </button>
-                                                            <button className="p-3 rounded-full bg-white/10 backdrop-blur-xl text-white hover:bg-white/30 transition-all border border-white/20">
-                                                                <Maximize2 size={18} />
-                                                            </button>
-                                                        </div>
-                                                        <div className="absolute bottom-8 left-8 right-8 text-white md:translate-y-2 md:group-hover:translate-y-0 transition-all duration-700 delay-75">
-                                                            <p className="text-[9px] font-bold tracking-[0.3em] uppercase opacity-40 mb-2">
-                                                                {img.category}
-                                                            </p>
-                                                            <h3 className="text-xl md:text-2xl font-medium leading-tight tracking-tight mb-3">
-                                                                {img.alt}
+                                                    <div className="absolute inset-0 bg-white/40 opacity-0 md:group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
+                                                        <div className="text-black text-center">
+                                                            <h3 className="text-xs md:text-sm font-bold tracking-[0.2em] opacity-90 uppercase text-black">
+                                                                {img.width && img.height ? `${img.width}x${img.height}` : ''}
                                                             </h3>
-                                                            <div className="h-px w-0 group-hover:w-full bg-white/20 transition-all duration-700 delay-200" />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="absolute top-4 left-4 md:hidden">
-                                                        <div className="bg-black/60 backdrop-blur-xl px-4 py-2 border border-white/10">
-                                                            <p className="text-[9px] font-black tracking-widest text-white uppercase">
-                                                                {img.category}
-                                                            </p>
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -390,7 +470,7 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                         <div className="absolute top-0 inset-x-0 h-20 md:h-24 px-6 md:px-20 flex items-center justify-between z-60">
                             <div className="text-white">
                                 <p className="text-[10px] font-black tracking-[1em] uppercase opacity-30 mb-1">
-                                    {displayImages[lightboxIndex].category}
+                                    {displayImages[lightboxIndex].category_name}
                                 </p>
                                 <h2 className="text-sm md:text-base font-medium tracking-[0.2em] uppercase truncate max-w-[200px] md:max-w-none opacity-80">
                                     {displayImages[lightboxIndex].alt}
@@ -441,41 +521,40 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
 
                             <AnimatePresence mode="wait">
                                 <motion.div
-                                    key={lightboxIndex}
+                                    key={displayImages[lightboxIndex].id}
                                     initial={{
                                         opacity: 0,
-                                        scale: 0.9,
-                                        filter: "blur(20px)",
+                                        scale: 0.95,
+                                        filter: "blur(10px)",
                                     }}
                                     animate={{
                                         opacity: 1,
                                         scale: 1,
                                         filter: "blur(0px)",
                                     }}
-                                    exit={{
-                                        opacity: 0,
-                                        scale: 1.1,
-                                        filter: "blur(20px)",
-                                    }}
                                     transition={{
                                         duration: 0.8,
                                         ease: [0.22, 1, 0.36, 1],
                                     }}
-                                    className="relative w-full h-full flex items-center justify-center"
+                                    className="relative w-full h-full flex items-center justify-center font-inter"
                                 >
                                     <div className="relative w-full h-full flex items-center justify-center p-4 md:p-12">
                                         {displayImages[lightboxIndex].video_url ? (
-                                            <div className="w-full h-full max-w-6xl aspect-video overflow-hidden rounded-2xl shadow-2xl bg-black">
-                                                <iframe
-                                                    width="100%"
-                                                    height="100%"
-                                                    src={`https://www.youtube.com/embed/${getYoutubeId(displayImages[lightboxIndex].video_url!)}?autoplay=1`}
-                                                    title="YouTube video player"
-                                                    frameBorder="0"
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                    allowFullScreen
-                                                    className="w-full h-full"
-                                                />
+                                            <div className="relative w-full h-full max-w-6xl aspect-video overflow-hidden shadow-2xl bg-black">
+                                                <div className="absolute inset-0 z-0">
+                                                    <iframe
+                                                        width="100%"
+                                                        height="100%"
+                                                        src={`https://www.youtube.com/embed/${getYoutubeId(displayImages[lightboxIndex].video_url!)}?autoplay=1&controls=0&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&showinfo=0&mute=0`}
+                                                        title="YouTube video player"
+                                                        frameBorder="0"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                        allowFullScreen
+                                                        className="w-full h-full scale-[1.3] origin-center"
+                                                    />
+                                                </div>
+                                                {/* Transparent Interaction Overlay (Tailwind implementation) */}
+                                                <div className="absolute inset-0 z-10 bg-transparent cursor-default" />
                                             </div>
                                         ) : (
                                             <Image
@@ -505,12 +584,16 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                         </div>
 
                         <div className="absolute bottom-0 inset-x-0 h-24 md:h-32 px-6 md:px-16 flex flex-col justify-end pb-8 md:pb-12">
-                            <div className="flex justify-center gap-1.5 md:gap-2 mb-6 overflow-x-auto no-scrollbar py-4 max-w-xl mx-auto">
+                            <div className="flex items-center gap-2 mb-12">
+                                <Filter size={14} className="opacity-40" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest opacity-20">Filter By</span>
+                            </div>
+                            <div className="flex justify-center gap-4 md:gap-8 overflow-x-auto no-scrollbar py-4 max-w-xl mx-auto">
                                 {displayImages.map((_, i) => (
                                     <button
                                         key={i}
                                         onClick={() => setLightboxIndex(i)}
-                                className={`h-px transition-all duration-700 rounded-full shrink-0 ${
+                                        className={`h-px transition-all duration-700 rounded-full shrink-0 ${
                                             i === lightboxIndex
                                                 ? "w-12 md:w-16 bg-white"
                                                 : "w-2 md:w-4 bg-white/10 hover:bg-white/30"

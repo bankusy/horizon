@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Trash2, ExternalLink, Image as ImageIcon, GripVertical, AlertCircle } from "lucide-react";
-import { Reorder, useDragControls } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Trash2, ExternalLink, Image as ImageIcon, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import {
@@ -16,6 +16,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import React, { useState, useEffect } from "react";
 
 interface Banner {
     id: string;
@@ -28,8 +29,7 @@ interface Banner {
 interface BannerListProps {
     banners: Banner[];
     onDelete?: (id: string) => void;
-    onReorder?: (newBanners: Banner[]) => void;
-    onReorderComplete?: () => void;
+    onUpdateOrder?: (id: string, newOrder: number) => void;
     selectedIds: string[];
     onSelectionChange: (ids: string[]) => void;
 }
@@ -37,8 +37,7 @@ interface BannerListProps {
 export function BannerList({
     banners,
     onDelete,
-    onReorder,
-    onReorderComplete,
+    onUpdateOrder,
     selectedIds,
     onSelectionChange,
 }: BannerListProps) {
@@ -92,53 +91,56 @@ export function BannerList({
 
     return (
         <div className="w-full space-y-4">
-            {/* Header / Toolbar - ImageList와 동일하게 맞춤 */}
-            <div className="flex items-center justify-between px-6 py-3 bg-zinc-50 border border-border rounded-xl">
+            <div className="flex items-center justify-between px-6 py-4 bg-card border border-border rounded-none">
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center h-5">
-                        <input
-                            type="checkbox"
-                            checked={isAllSelected}
-                            ref={(el) => {
-                                if (el) el.indeterminate = isPartialSelected;
-                            }}
-                            onChange={handleSelectAll}
-                            className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 cursor-pointer"
-                        />
-                    </div>
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                        전체 선택 ({banners.length})
-                    </span>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative flex items-center justify-center">
+                            <input
+                                type="checkbox"
+                                checked={isAllSelected}
+                                ref={(el) => {
+                                    if (el) el.indeterminate = isPartialSelected;
+                                }}
+                                onChange={handleSelectAll}
+                                className="peer appearance-none w-5 h-5 rounded-none border border-input bg-background checked:bg-primary checked:border-primary transition-all duration-300"
+                            />
+                            <div className="absolute opacity-0 peer-checked:opacity-100 text-primary-foreground pointer-events-none transition-opacity duration-300">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                        </div>
+                        <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors uppercase tracking-widest">
+                            {isAllSelected ? "선택 해제" : `전체 선택 (${banners.length})`}
+                        </span>
+                    </label>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tight bg-white px-3 py-1 rounded-full border border-border shadow-sm">
-                    <GripVertical size={12} />
-                    핸들을 드래그하여 순서 변경
+                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tight bg-secondary/50 border border-border px-4 py-1.5 rounded-none">
+                    <span>순서 변경: 입력 또는 화살표 사용</span>
                 </div>
             </div>
 
-            <Reorder.Group
-                as="div"
-                axis="y"
-                values={banners}
-                onReorder={onReorder || (() => { })}
-                onDragEnd={onReorderComplete}
-                className="flex flex-col gap-3 p-4 bg-zinc-50/30 rounded-xl"
-            >
-                {banners.map((banner) => (
-                    <BannerRow
-                        key={banner.id}
-                        banner={banner}
-                        isSelected={selectedIds.includes(banner.id)}
-                        onSelectOne={handleSelectOne}
-                        onDelete={handleDelete}
-                    />
-                ))}
-            </Reorder.Group>
+            <div className="flex flex-col gap-4 p-8 bg-secondary/10 border border-border rounded-none">
+                {banners.map((banner, index) => {
+                    const isFirst = index === 0;
+                    const isLast = index === banners.length - 1;
+                    return (
+                        <BannerRow
+                            key={banner.id}
+                            banner={banner}
+                            isSelected={selectedIds.includes(banner.id)}
+                            onSelectOne={handleSelectOne}
+                            onDelete={handleDelete}
+                            onUpdateOrder={onUpdateOrder}
+                            isFirst={isFirst}
+                            isLast={isLast}
+                        />
+                    );
+                })}
+            </div>
 
             {banners.length === 0 && (
-                <div className="py-20 flex flex-col items-center justify-center text-muted-foreground bg-zinc-50/20 rounded-xl border border-dashed">
-                    <ImageIcon size={40} className="mb-4 opacity-20" />
-                    <p className="text-xs font-semibold uppercase tracking-widest">
+                <div className="py-32 flex flex-col items-center justify-center text-muted-foreground bg-secondary/20 border border-dashed border-border rounded-none">
+                    <ImageIcon size={48} className="mb-4 opacity-10" />
+                    <p className="text-xs font-bold uppercase tracking-[0.3em] opacity-30">
                         등록된 배너가 없습니다
                     </p>
                 </div>
@@ -152,40 +154,67 @@ interface BannerRowProps {
     isSelected: boolean;
     onSelectOne: (id: string) => void;
     onDelete: (id: string, src: string) => void;
+    onUpdateOrder?: (id: string, newOrder: number) => void;
+    isFirst: boolean;
+    isLast: boolean;
 }
 
-function BannerRow({ banner, isSelected, onSelectOne, onDelete }: BannerRowProps) {
-    const controls = useDragControls();
+function BannerRow({ banner, isSelected, onSelectOne, onDelete, onUpdateOrder, isFirst, isLast }: BannerRowProps) {
+    const [orderInput, setOrderInput] = useState(String(banner.display_order));
+
+    useEffect(() => {
+        setOrderInput(String(banner.display_order));
+    }, [banner.display_order]);
+
+    const handleOrderBlur = () => {
+        const newOrder = parseInt(orderInput, 10);
+        if (!isNaN(newOrder) && newOrder !== banner.display_order && onUpdateOrder) {
+            onUpdateOrder(banner.id, newOrder);
+        } else {
+            setOrderInput(String(banner.display_order));
+        }
+    };
+
+    const handleOrderKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleOrderBlur();
+        }
+    };
 
     return (
-        <Reorder.Item
-            value={banner}
-            id={banner.id}
-            dragListener={false}
-            dragControls={controls}
-            as="div"
-            layout
-            initial={false}
-            animate={{
-                scale: 1,
-                boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-                zIndex: 1,
-                backgroundColor: isSelected ? "rgb(244 244 245 / 0.5)" : "white"
-            }}
-            whileDrag={{
-                scale: 1.02,
-                boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
-                zIndex: 50,
-                backgroundColor: "white",
-            }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className={`flex items-center gap-4 p-3 rounded-xl border border-border shadow-sm group transition-colors hover:border-zinc-300 ${isSelected ? "border-zinc-900" : ""}`}
+        <div
+            className={`flex items-center gap-6 p-4 rounded-none border group transition-all duration-300 ${
+                isSelected ? "bg-muted/50 border-primary" : "bg-card border-border hover:border-primary/20 hover:bg-secondary/30"
+            }`}
         >
-            <div
-                className="cursor-grab active:cursor-grabbing p-2 hover:bg-zinc-100 rounded-lg transition-colors shrink-0"
-                onPointerDown={(e) => controls.start(e)}
-            >
-                <GripVertical size={18} className="text-zinc-400" />
+            <div className="flex flex-col items-center gap-1 shrink-0 border-r border-border pr-4">
+               <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-none text-muted-foreground hover:text-primary disabled:opacity-20"
+                    disabled={isFirst}
+                    onClick={() => onUpdateOrder?.(banner.id, banner.display_order - 1)}
+                >
+                    <ChevronUp size={14} />
+                </Button>
+                <div className="relative w-12">
+                     <Input
+                        className="h-7 text-center p-0 text-xs font-bold rounded-none border-border focus:border-primary bg-background"
+                        value={orderInput}
+                        onChange={(e) => setOrderInput(e.target.value)}
+                        onBlur={handleOrderBlur}
+                        onKeyDown={handleOrderKeyDown}
+                    />
+                </div>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-none text-muted-foreground hover:text-primary disabled:opacity-20"
+                    disabled={isLast}
+                    onClick={() => onUpdateOrder?.(banner.id, banner.display_order + 1)}
+                >
+                    <ChevronDown size={14} />
+                </Button>
             </div>
 
             <div className="flex items-center shrink-0">
@@ -193,38 +222,40 @@ function BannerRow({ banner, isSelected, onSelectOne, onDelete }: BannerRowProps
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => onSelectOne(banner.id)}
-                    className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                    className="w-4 h-4 rounded-none border-input bg-background checked:bg-primary checked:border-primary transition-all cursor-pointer"
                 />
             </div>
 
-            <div className="relative w-20 h-10 overflow-hidden rounded-lg bg-zinc-100 border border-border shrink-0">
+            <div className="relative w-32 h-16 overflow-hidden rounded-none bg-muted border border-border shrink-0">
                 <img
                     src={banner.src}
                     alt={banner.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
             </div>
 
-            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                <span className="text-sm font-bold text-zinc-900 truncate uppercase tracking-tight">
+            <div className="flex-1 min-w-0 flex flex-col gap-3">
+                <span className="text-2xl font-black text-foreground truncate uppercase tracking-tight group-hover:text-primary transition-colors leading-[1.1]">
                     {banner.title}
                 </span>
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter tabular-nums">
-                        ORDER #{banner.display_order} • {banner.description?.slice(0, 30)}...
+                <div className="flex items-center gap-4">
+                    <span className="w-1.5 h-1.5 rounded-none bg-border" />
+                    <span className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/20 truncate">
+                        {banner.description?.slice(0, 80)}...
                     </span>
                 </div>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-500">
                 <Button
                     variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-lg hover:bg-white border border-transparent hover:border-border"
+                    size="sm"
+                    className="h-10 rounded-none bg-muted/50 hover:bg-primary hover:text-primary-foreground border border-transparent"
                     asChild
                 >
                     <a href={banner.src} target="_blank" rel="noreferrer">
-                        <ExternalLink size={14} className="text-zinc-500" />
+                        <ExternalLink size={14} className="mr-2" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">열기</span>
                     </a>
                 </Button>
                 
@@ -232,13 +263,13 @@ function BannerRow({ banner, isSelected, onSelectOne, onDelete }: BannerRowProps
                     <AlertDialogTrigger asChild>
                         <Button
                             variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-lg text-destructive hover:text-white hover:bg-destructive border border-transparent hover:border-destructive"
+                            size="sm"
+                            className="h-10 w-10 p-0 rounded-none bg-muted/50 text-destructive hover:bg-destructive hover:text-destructive-foreground border border-transparent"
                         >
-                            <Trash2 size={14} />
+                            <Trash2 size={16} />
                         </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-2xl">
+                    <AlertDialogContent className="rounded-none">
                         <AlertDialogHeader>
                             <AlertDialogTitle>배너를 삭제하시겠습니까?</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -246,14 +277,14 @@ function BannerRow({ banner, isSelected, onSelectOne, onDelete }: BannerRowProps
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel className="rounded-xl font-bold">취소</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => onDelete(banner.id, banner.src)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl font-bold">
+                            <AlertDialogCancel className="rounded-none font-bold">취소</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onDelete(banner.id, banner.src)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-none font-bold">
                                 삭제
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-        </Reorder.Item>
+        </div>
     );
 }

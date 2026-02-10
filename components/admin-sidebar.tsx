@@ -19,10 +19,12 @@ import {
   Image as ImageIcon, 
   Settings, 
   ArrowLeft,
-  User
+  User,
+  Tags
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 const items = [
   {
@@ -34,6 +36,11 @@ const items = [
     title: "갤러리 관리",
     url: "/admin/gallery",
     icon: ImageIcon,
+  },
+  {
+    title: "카테고리 관리",
+    url: "/admin/categories",
+    icon: Tags,
   },
   {
     title: "설정",
@@ -48,12 +55,17 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r border-border bg-sidebar">
       <SidebarHeader className="h-16 flex items-start justify-center px-6 border-b border-border mb-2">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-foreground rounded flex items-center justify-center">
-            <span className="text-background font-black text-xs">H</span>
+        <div className="flex items-center gap-1.5">
+          <div className="relative w-7 h-7">
+            <Image
+              src="/logo.svg"
+              alt="HORIZON Logo"
+              fill
+              className="object-contain"
+            />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-sm font-bold tracking-tight">HORIZON</h1>
+            <h1 className="text-sm font-light tracking-tight">HORIZON</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">스튜디오 관리자</p>
           </div>
         </div>

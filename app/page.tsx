@@ -3,6 +3,7 @@ import { Navigation } from "@/components/Navigation";
 import { HeroHeader } from "@/components/HeroHeader";
 import { BannerCarousel } from "@/components/BannerCarousel";
 import { GalleryView } from "@/components/GalleryView";
+import { Footer } from "@/components/Footer";
 
 // 서버 사이드 데이터 페칭 함수
 async function getInitialData() {
@@ -59,6 +60,8 @@ export default async function Home() {
                     nextCursor={nextCursor} 
                 />
             </main>
+
+            <Footer />
         </div>
     );
 }

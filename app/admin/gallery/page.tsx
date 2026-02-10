@@ -1,35 +1,72 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ImageForm } from "../components/ImageForm";
+import { UnifiedMediaForm } from "../components/UnifiedMediaForm";
 import { ImageList } from "../components/ImageList";
 import { BannerForm } from "../components/BannerForm";
 import { BannerList } from "../components/BannerList";
 import { EditImageDialog } from "../components/EditImageDialog";
-import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { LayoutGroup } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+interface Category {
+    id: string;
+    name: string;
+}
 
 interface GalleryImage {
     id: string | number;
     src: string;
     alt: string;
-    category: string;
+    category_id: string;
+    category_name?: string;
     display_order: number;
+    type?: string;
+    video_url?: string;
 }
 
 export default function GalleryManagementPage() {
     const [images, setImages] = useState<GalleryImage[]>([]);
     const [banners, setBanners] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("list");
+    const [activeTab, setActiveTab] = useState("archive");
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
     const [selectedBannerIds, setSelectedBannerIds] = useState<string[]>([]);
     const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
+
+    // 카테고리 목록 로드
+    useEffect(() => {
+        async function fetchCategories() {
+            if (!supabase) return;
+            const { data } = await supabase
+                .from("categories")
+                .select("id, name")
+                .order("display_order", { ascending: true });
+            if (data) setCategories(data);
+        }
+        fetchCategories();
+    }, []);
+
+    // 필터링된 이미지
+    const filteredImages = useMemo(() => {
+        if (selectedCategoryId === "all") return images;
+        return images.filter(img => img.category_id === selectedCategoryId);
+    }, [images, selectedCategoryId]);
 
     // Fetch images and banners from Supabase on mount
     React.useEffect(() => {
@@ -50,8 +87,10 @@ export default function GalleryManagementPage() {
                     id: item.id,
                     src: item.src,
                     alt: item.title,
-                    category: item.category,
-                    display_order: item.display_order
+                    category_id: item.category_id,
+                    display_order: item.display_order,
+                    type: item.type,
+                    video_url: item.video_url
                 })) || [];
                 
                 setImages(formattedImages);
@@ -77,13 +116,16 @@ export default function GalleryManagementPage() {
         fetchData();
     }, []);
 
-    const handleAddImage = (newData: { id: string; title: string; src: string; category: string; video_url?: string; aspect_ratio: number; display_order: number }) => {
+    const handleAddImage = (newData: { id: string; title: string; src: string; category_id: string; category_name?: string; video_url?: string; type?: string; aspect_ratio?: number; display_order: number }) => {
         const newImage: GalleryImage = {
             id: newData.id,
             alt: newData.title,
             src: newData.src,
-            category: newData.category,
-            display_order: newData.display_order
+            category_id: newData.category_id,
+            category_name: newData.category_name,
+            display_order: newData.display_order,
+            type: newData.type,
+            video_url: newData.video_url
         };
         setImages(prev => [newImage, ...prev]);
         // Note: Removed setActiveTab("list") to allow bulk upload to finish in current tab
@@ -178,33 +220,6 @@ export default function GalleryManagementPage() {
         setBanners(prev => [newBanner, ...prev]);
     };
 
-    const handleBannerReorder = (newBanners: any[]) => {
-        // 즉시 로컬 UI 순서만 변경
-        const baseOrder = banners.length > 0 ? Math.min(...banners.map(b => b.display_order)) : 0;
-        const reordered = newBanners.map((b, index) => ({
-            ...b,
-            display_order: baseOrder + index
-        }));
-        setBanners(reordered);
-    };
-
-    const handleProcessBannerReorder = async () => {
-        if (!supabase || banners.length === 0) return;
-        try {
-            const updates = banners.map(b => 
-                supabase
-                    .from("banners")
-                    .update({ display_order: b.display_order })
-                    .eq("id", b.id)
-            );
-            await Promise.all(updates);
-            toast.success("배너 순서가 안전하게 저장되었습니다.");
-        } catch (error: any) {
-            console.error("Banner reorder save failed:", error);
-            toast.error("배너 순서 저장 중 오류가 발생했습니다.");
-        }
-    };
-
     const handleDeleteBanner = (id: string) => {
         setBanners(prev => prev.filter(b => b.id !== id));
         setSelectedBannerIds(prev => prev.filter(selectedId => selectedId !== id));
@@ -254,225 +269,373 @@ export default function GalleryManagementPage() {
         }
     };
 
-    const handleUpdateImage = async (id: string | number, updates: { title: string; category: string; display_order: number }) => {
+    const handleUpdateImage = async (id: string | number, updates: { title: string; category_id: string; display_order: number }) => {
         if (!supabase) return;
         try {
-            // 1. 순서 맞교환(Swap) 로직 확인
+             // 1. Check if order changed and if we need to swap or just update
             const targetOrder = updates.display_order;
-            const existingImageWithOrder = images.find(img => img.display_order === targetOrder && img.id !== id);
             const currentImage = images.find(img => img.id === id);
 
-            if (existingImageWithOrder && currentImage) {
-                // 이미 해당 순서를 가진 이미지가 있다면 서로 순서를 맞바꿉니다.
-                const oldOrder = currentImage.display_order;
+            if (currentImage && currentImage.display_order !== targetOrder) {
+                 // Try swap if conflict exists
+                 const existingImageWithOrder = images.find(img => img.display_order === targetOrder && img.id !== id);
+                 
+                 if (existingImageWithOrder) {
+                     // Swap logic
+                     const oldOrder = currentImage.display_order;
+                     
+                     const { error: swapError1 } = await supabase
+                        .from("gallery")
+                        .update({ display_order: targetOrder, title: updates.title, category_id: updates.category_id })
+                        .eq("id", id);
+                    
+                    const { error: swapError2 } = await supabase
+                        .from("gallery")
+                        .update({ display_order: oldOrder })
+                        .eq("id", existingImageWithOrder.id);
 
-                // DB 업데이트 (두 항목 모두)
-                const { error: swapError1 } = await supabase
-                    .from("gallery")
-                    .update({ display_order: targetOrder, title: updates.title, category: updates.category })
-                    .eq("id", id);
-                
-                const { error: swapError2 } = await supabase
-                    .from("gallery")
-                    .update({ display_order: oldOrder })
-                    .eq("id", existingImageWithOrder.id);
+                    if (swapError1 || swapError2) throw swapError1 || swapError2;
 
-                if (swapError1 || swapError2) throw swapError1 || swapError2;
+                    setImages(prev => prev.map(img => {
+                        if (img.id === id) return { ...img, alt: updates.title, category_id: updates.category_id, display_order: targetOrder };
+                        if (img.id === existingImageWithOrder.id) return { ...img, display_order: oldOrder };
+                        return img;
+                    }).sort((a, b) => a.display_order - b.display_order));
+                    
+                    toast.success("정보가 수정되고 순서가 교체되었습니다.");
+                 } else {
+                     // Just update
+                     const { error } = await supabase
+                        .from("gallery")
+                        .update({
+                            title: updates.title,
+                            category_id: updates.category_id,
+                            display_order: updates.display_order
+                        })
+                        .eq("id", id);
+                    if (error) throw error;
 
-                // 로컬 상태 업데이트
-                setImages(prev => prev.map(img => {
-                    if (img.id === id) return { ...img, alt: updates.title, category: updates.category, display_order: targetOrder };
-                    if (img.id === existingImageWithOrder.id) return { ...img, display_order: oldOrder };
-                    return img;
-                }).sort((a, b) => a.display_order - b.display_order));
-                
-                toast.success(`순서가 ${existingImageWithOrder.alt} 항목과 맞교환되었습니다.`);
+                    setImages(prev => prev.map(img => 
+                        img.id === id ? { ...img, alt: updates.title, category_id: updates.category_id, display_order: updates.display_order } : img
+                    ).sort((a, b) => a.display_order - b.display_order));
+                    toast.success("정보가 수정되었습니다.");
+                 }
             } else {
-                // 일반적인 단독 수정
+                // No order change or simple update
                 const { error } = await supabase
                     .from("gallery")
                     .update({
                         title: updates.title,
-                        category: updates.category,
-                        display_order: updates.display_order
+                        category_id: updates.category_id
                     })
                     .eq("id", id);
                 if (error) throw error;
                 
                 setImages(prev => prev.map(img => 
-                    img.id === id ? { ...img, alt: updates.title, category: updates.category, display_order: updates.display_order } : img
+                    img.id === id ? { ...img, alt: updates.title, category_id: updates.category_id } : img
                 ).sort((a, b) => a.display_order - b.display_order));
-                
-                toast.success("정보가 성공적으로 수정되었습니다.");
+                toast.success("정보가 수정되었습니다.");
             }
         } catch (error: any) {
             console.error("Update error:", error);
             toast.error("수정에 실패했습니다.");
-            throw error;
         }
     };
 
-    const handleReorder = (newImages: GalleryImage[]) => {
-        // 즉시 로컬 UI 순서만 변경 (DB 업데이트는 하지 않음)
-        // 새로운 인덱스 순서대로 display_order 값을 임시로 재할당하여 UI에 반영합니다.
-        const baseOrder = images.length > 0 ? Math.min(...images.map(img => img.display_order)) : 0;
+    const handleGalleryOrderUpdate = async (id: string | number, newOrder: number) => {
+        if (!supabase) return;
         
-        const reorderedImages = newImages.map((img, index) => ({
-            ...img,
-            display_order: baseOrder + index
-        }));
+        // 1. Validation
+        if (newOrder < 1 || newOrder > images.length) {
+            toast.error("유효하지 않은 순서입니다.");
+            return;
+        }
 
-        setImages(reorderedImages);
-    };
-
-    const handleProcessReorder = async () => {
-        // 드래그가 완전히 끝난 시점에만 호출되어 DB에 한 번만 저장합니다.
-        if (!supabase || images.length === 0) return;
+        const currentImage = images.find(img => img.id === id);
+        if (!currentImage || currentImage.display_order === newOrder) return;
 
         try {
-            // 현재 images 상태는 handleReorder에 의해 이미 최신 순서로 정렬되어 있습니다.
-            const updates = images.map(img => 
-                supabase
-                    .from("gallery")
-                    .update({ display_order: img.display_order })
-                    .eq("id", img.id)
-            );
+            // 2. Find target image to swap with
+            const targetImage = images.find(img => img.display_order === newOrder);
             
-            await Promise.all(updates);
-            toast.success("전체 순서가 안전하게 저장되었습니다.");
-        } catch (error: any) {
-            console.error("Reorder save failed:", error);
-            toast.error("이미지 순서 저장 중 오류가 발생했습니다.");
+            if (targetImage) {
+                // Swap logic
+                const { error: error1 } = await supabase
+                    .from("gallery")
+                    .update({ display_order: newOrder })
+                    .eq("id", id);
+                
+                const { error: error2 } = await supabase
+                    .from("gallery")
+                    .update({ display_order: currentImage.display_order })
+                    .eq("id", targetImage.id);
+
+                if (error1 || error2) throw error1 || error2;
+
+                setImages(prev => prev.map(img => {
+                    if (img.id === id) return { ...img, display_order: newOrder };
+                    if (img.id === targetImage.id) return { ...img, display_order: currentImage.display_order };
+                    return img;
+                }).sort((a, b) => a.display_order - b.display_order));
+
+                toast.success("순서가 변경되었습니다.");
+            } else {
+                // Just update if no conflict (rare case if list is consistent)
+                const { error } = await supabase
+                    .from("gallery")
+                    .update({ display_order: newOrder })
+                    .eq("id", id);
+                
+                if (error) throw error;
+
+                setImages(prev => prev.map(img => 
+                    img.id === id ? { ...img, display_order: newOrder } : img
+                ).sort((a, b) => a.display_order - b.display_order));
+                 toast.success("순서가 변경되었습니다.");
+            }
+        } catch (error) {
+            console.error("Order update failed:", error);
+            toast.error("순서 변경에 실패했습니다.");
+        }
+    };
+
+    const handleBannerOrderUpdate = async (id: string, newOrder: number) => {
+        if (!supabase) return;
+
+        if (newOrder < 0) { // Banners might be 0-indexed or 1-indexed, let's assume 0 based on previous code or just check bounds
+             // Previous code: baseOrder + index. Let's assume strict simple ordering 1..N for simplicity or just relative.
+             // BannerList uses index 0..N. Let's check bounds carefully.
+             // Wait, previous code `banner.display_order` was used.
+             // Let's assume 1-based for consistency with UI "ORDER #1".
+             toast.error("유효하지 않은 순서입니다.");
+             return;
+        }
+        
+        // Check bounds against sorted list
+        // Banners might have gaps if deleted? No, we usually renormalize.
+        // But for swap, we just need to find the target.
+        
+        const currentBanner = banners.find(b => b.id === id);
+        if (!currentBanner || currentBanner.display_order === newOrder) return;
+
+        try {
+            const targetBanner = banners.find(b => b.display_order === newOrder);
+
+            if (targetBanner) {
+                 const { error: error1 } = await supabase
+                    .from("banners")
+                    .update({ display_order: newOrder })
+                    .eq("id", id);
+                
+                const { error: error2 } = await supabase
+                    .from("banners")
+                    .update({ display_order: currentBanner.display_order })
+                    .eq("id", targetBanner.id);
+
+                if (error1 || error2) throw error1 || error2;
+
+                setBanners(prev => prev.map(b => {
+                    if (b.id === id) return { ...b, display_order: newOrder };
+                    if (b.id === targetBanner.id) return { ...b, display_order: currentBanner.display_order };
+                    return b;
+                }).sort((a, b) => a.display_order - b.display_order));
+                
+                toast.success("배너 순서가 변경되었습니다.");
+            } else {
+                 const { error } = await supabase
+                    .from("banners")
+                    .update({ display_order: newOrder })
+                    .eq("id", id);
+                
+                if (error) throw error;
+
+                setBanners(prev => prev.map(b => 
+                    b.id === id ? { ...b, display_order: newOrder } : b
+                ).sort((a, b) => a.display_order - b.display_order));
+                toast.success("배너 순서가 변경되었습니다.");
+            }
+        } catch (error) {
+            console.error("Banner order update failed:", error);
+            toast.error("순서 변경에 실패했습니다.");
         }
     };
 
     return (
-        <div className="space-y-10">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight mb-1">갤러리 아카이브</h2>
-                    <p className="text-sm text-muted-foreground">스튜디오의 고화질 시각화 자산을 관리하고 등록합니다.</p>
+        <div className="min-h-screen bg-background text-foreground space-y-12 pb-20">
+            {/* Area 1: Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pb-8 border-b border-border">
+                <div className="space-y-3">
+                    <h2 className="text-5xl font-black tracking-tighter uppercase leading-none">
+                        관리자 갤러리
+                    </h2>
+                    <p className="text-[10px] font-bold tracking-[0.3em] text-foreground/50 uppercase">
+                        Studio Asset Management System
+                    </p>
                 </div>
                 
-                <Button 
-                    onClick={() => setActiveTab("upload")}
-                    className="rounded-lg px-6 h-10 font-semibold"
-                >
-                    <Plus size={16} className="mr-2" />
-                    새 이미지 등록
-                </Button>
+                <div className="flex items-center gap-3">
+                    <div className="px-4 py-2 bg-secondary border border-border">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            전체: {images.length}
+                        </span>
+                    </div>
+                </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="bg-transparent h-auto p-0 gap-8 mb-8 border-b border-border w-full justify-start rounded-none">
-                    <TabsTrigger 
-                        value="list" 
-                        className="rounded-none border-b border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 text-sm font-semibold transition-all text-muted-foreground data-[state=active]:text-foreground relative"
-                    >
-                        전체 목록 ({images.length})
-                    </TabsTrigger>
-                    <TabsTrigger 
-                        value="upload" 
-                        className="rounded-none border-b border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 text-sm font-semibold transition-all text-muted-foreground data-[state=active]:text-foreground"
-                    >
-                        이미지 등록
-                    </TabsTrigger>
-                    <TabsTrigger 
-                        value="banner" 
-                        className="rounded-none border-b border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 text-sm font-semibold transition-all text-muted-foreground data-[state=active]:text-foreground"
-                    >
-                        배너 관리 ({banners.length})
-                    </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="list" className="mt-0 focus-visible:outline-none">
-                    {selectedIds.length > 0 && (
-                        <div className="mb-4 p-4 bg-muted border border-border rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold text-foreground">{selectedIds.length}개 항목 선택됨</span>
-                                <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])} className="h-8 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">
-                                    선택 해제
-                                </Button>
-                            </div>
-                            <Button 
-                                variant="destructive" 
-                                size="sm" 
-                                onClick={handleBatchDelete}
-                                className="h-8 rounded-lg font-bold text-[11px] uppercase tracking-wider"
-                            >
-                                <Trash2 size={14} className="mr-2" />
-                                선택 항목 삭제
-                            </Button>
-                        </div>
-                    )}
-                    <div className="rounded-xl border border-border bg-card overflow-hidden">
-                        {isLoading ? (
-                            <div className="py-20 flex flex-col items-center justify-center">
-                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
-                                <p className="text-sm text-muted-foreground">데이터를 불러오는 중...</p>
-                            </div>
-                        ) : (
-                            <ImageList 
-                                images={images} 
-                                onDelete={handleDeleteImage}
-                                onEdit={setEditingImage}
-                                onReorder={handleReorder}
-                                onReorderComplete={handleProcessReorder}
-                                selectedIds={selectedIds}
-                                onSelectionChange={setSelectedIds}
-                            />
-                        )}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-12">
+                <div className="flex justify-center border-b border-border/50 sticky top-0 bg-background/80 backdrop-blur-xl z-50 py-4">
+                    <TabsList className="bg-muted/50 p-1 border border-border h-14">
+                        <TabsTrigger 
+                            value="archive" 
+                            className="px-12 font-black uppercase tracking-widest text-[11px] data-[state=active]:bg-background data-[state=active]:text-primary transition-all duration-500"
+                        >
+                            이미지 & 영상 아카이브
+                        </TabsTrigger>
+                        <TabsTrigger 
+                            value="banners" 
+                            className="px-12 font-black uppercase tracking-widest text-[11px] data-[state=active]:bg-background data-[state=active]:text-primary transition-all duration-500"
+                        >
+                            히어로 배너 관리
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
+
+                <TabsContent value="archive" className="m-0 space-y-24 outline-none animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {/* Asset Registration Area */}
+                    <div className="flex flex-col gap-12">
+                        <UnifiedMediaForm onAdd={handleAddImage} />
                     </div>
-                </TabsContent>
-                
-                <TabsContent value="upload" className="mt-0 focus-visible:outline-none w-full">
-                    <Card className="rounded-xl border-border ">
-                        <ImageForm onAdd={handleAddImage} />
-                    </Card>
+
+                    {/* Gallery Archive List Area */}
+                    <section className="space-y-12">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-t-2 border-border/50 pt-16">
+                            <div className="flex items-center gap-6 px-4">
+                                <h3 className="text-4xl font-black uppercase tracking-tighter text-foreground leading-none">
+                                    아카이브 목록
+                                </h3>
+                                <span className="px-4 py-1.5 bg-secondary text-xs font-black text-muted-foreground border border-border">
+                                    {filteredImages.length} Assets
+                                </span>
+                            </div>
+
+                            {/* Toolbar */}
+                            <div className="flex flex-wrap items-center gap-4 py-3 bg-muted/10 ml-auto">
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">필터</span>
+                                    <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                                        <SelectTrigger className="w-[180px] h-10 bg-background border-border text-[10px] font-bold uppercase tracking-widest hover:bg-muted transition-all">
+                                            <SelectValue placeholder="카테고리" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-popover border-border text-popover-foreground">
+                                            <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">전체</SelectItem>
+                                            {categories.map((cat) => (
+                                                <SelectItem key={cat.id} value={cat.id} className="text-[10px] font-bold uppercase tracking-widest">
+                                                    {cat.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {selectedIds.length > 0 && (
+                                    <div className="flex items-center gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
+                                        <span className="w-px h-6 bg-border mx-2" />
+                                        <span className="text-[10px] font-black text-foreground uppercase tracking-widest">
+                                            {selectedIds.length}개 선택됨
+                                        </span>
+                                        <Button 
+                                            variant="destructive" 
+                                            size="sm" 
+                                            onClick={handleBatchDelete}
+                                            className="h-10 px-6 font-black text-[10px] uppercase tracking-widest"
+                                        >
+                                            선택 항목 삭제
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="min-h-[400px]">
+                            {isLoading ? (
+                                <div className="py-40 flex flex-col items-center justify-center">
+                                    <Loader2 className="h-10 w-10 animate-spin text-primary mb-6 opacity-20" />
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">아카이브 동기화 중</p>
+                                </div>
+                            ) : (
+                                activeTab === "archive" && (
+                                    <LayoutGroup id="gallery-archive">
+                                        <ImageList 
+                                            images={filteredImages} 
+                                            onDelete={handleDeleteImage}
+                                            onEdit={setEditingImage}
+                                            onUpdateOrder={handleGalleryOrderUpdate}
+                                            selectedIds={selectedIds}
+                                            onSelectionChange={setSelectedIds}
+                                        />
+                                    </LayoutGroup>
+                                )
+                            )}
+                        </div>
+                    </section>
                 </TabsContent>
 
-                <TabsContent value="banner" className="mt-0 focus-visible:outline-none w-full space-y-6">
-                    {selectedBannerIds.length > 0 && (
-                        <div className="mb-4 p-4 bg-muted border border-border rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold text-foreground">{selectedBannerIds.length}개 배너 선택됨</span>
-                                <Button variant="ghost" size="sm" onClick={() => setSelectedBannerIds([])} className="h-8 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">
-                                    선택 해제
-                                </Button>
-                            </div>
-                            <Button 
-                                variant="destructive" 
-                                size="sm" 
-                                onClick={handleBannerBatchDelete}
-                                className="h-8 rounded-lg font-bold text-[11px] uppercase tracking-wider"
-                            >
-                                <Trash2 size={14} className="mr-2" />
-                                선택 항목 삭제
-                            </Button>
+                <TabsContent value="banners" className="m-0 space-y-24 outline-none animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {/* Hero Banner Area */}
+                    <section className="space-y-12">
+                        <div className="flex items-center gap-6 px-4">
+                            <h3 className="text-4xl font-black uppercase tracking-tighter text-foreground leading-none">
+                                히어로 배너 관리
+                            </h3>
+                            <span className="px-4 py-1.5 bg-secondary text-xs font-black text-muted-foreground border border-border">
+                                {banners.length} Banners
+                            </span>
                         </div>
-                    )}
-                    <Card className="rounded-xl border-border overflow-hidden">
-                        <div className="p-6 border-b bg-muted/30">
-                            <h3 className="text-lg font-bold">새 배너 등록</h3>
-                            <p className="text-sm text-muted-foreground">홈페이지 최상단 슬라이드에 표시될 큰 배너 이미지를 등록합니다.</p>
-                        </div>
-                        <BannerForm onAdd={handleAddBanner} />
-                    </Card>
 
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 px-2">
-                            <h3 className="text-xl font-black uppercase tracking-tight text-foreground">현재 배너 목록</h3>
-                            <span className="px-2 py-0.5 rounded-full bg-secondary text-[10px] font-bold text-muted-foreground">{banners.length}</span>
+                        <div className="flex flex-col gap-12">
+                            {/* 배너 등록 폼 */}
+                            <Card className="border-border bg-card overflow-hidden w-full">
+                                <CardHeader className="p-6 border-b border-border bg-secondary/10">
+                                    <CardTitle className="text-sm font-black uppercase tracking-widest">
+                                        새 배너 추가
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    <BannerForm onAdd={handleAddBanner} />
+                                </CardContent>
+                            </Card>
+
+                            {/* 배너 목록 */}
+                            <div className="w-full space-y-6">
+                                {selectedBannerIds.length > 0 && (
+                                    <div className="p-4 bg-muted/30 border border-destructive/20 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-foreground">
+                                            {selectedBannerIds.length}개의 배너 선택됨
+                                        </span>
+                                        <Button 
+                                            variant="destructive" 
+                                            size="sm" 
+                                            onClick={handleBannerBatchDelete}
+                                            className="h-8 px-6 font-black text-[9px] uppercase tracking-widest"
+                                        >
+                                            선택 삭제
+                                        </Button>
+                                    </div>
+                                )}
+                                {activeTab === "banners" && (
+                                    <LayoutGroup id="hero-banners">
+                                        <BannerList 
+                                            banners={banners} 
+                                            onDelete={handleDeleteBanner} 
+                                            onUpdateOrder={handleBannerOrderUpdate}
+                                            selectedIds={selectedBannerIds}
+                                            onSelectionChange={setSelectedBannerIds}
+                                        />
+                                    </LayoutGroup>
+                                )}
+                            </div>
                         </div>
-                        <BannerList 
-                            banners={banners} 
-                            onDelete={handleDeleteBanner} 
-                            onReorder={handleBannerReorder}
-                            onReorderComplete={handleProcessBannerReorder}
-                            selectedIds={selectedBannerIds}
-                            onSelectionChange={setSelectedBannerIds}
-                        />
-                    </div>
+                    </section>
                 </TabsContent>
             </Tabs>
 
@@ -485,3 +648,4 @@ export default function GalleryManagementPage() {
         </div>
     );
 }
+

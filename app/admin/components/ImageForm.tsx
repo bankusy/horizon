@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,23 +16,45 @@ import { supabase } from "@/lib/supabase";
 import imageCompression from "browser-image-compression";
 import { Loader2, Upload, X, CheckCircle2, AlertCircle, Image as ImageIcon } from "lucide-react";
 
+interface Category {
+  id: string;
+  name: string;
+  display_order: number;
+}
+
 interface PendingUpload {
   id: string;
   file: File;
   title: string;
-  category: "Exterior" | "Interior";
-  videoUrl?: string; // 추가: 유튜브 링크
-  aspectRatio: number; // 추가: 이미지 비율 (가로/세로)
-  displayOrder: number; // 추가: 정렬 순서
+  categoryId: string; // category_id로 변경
+  videoUrl?: string;
+  aspectRatio: number;
+  width: number;
+  height: number;
+  displayOrder: number;
   status: "pending" | "compressing" | "uploading" | "completed" | "error";
   error?: string;
   previewUrl: string;
 }
 
-export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: string; src: string; category: string; video_url?: string; aspect_ratio: number; display_order: number }) => void }) {
+export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: string; src: string; category_id: string; category_name?: string; video_url?: string; aspect_ratio: number; display_order: number }) => void }) {
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // 카테고리 목록 로드
+  useEffect(() => {
+    async function fetchCategories() {
+      if (!supabase) return;
+      const { data } = await supabase
+        .from("categories")
+        .select("*")
+        .order("display_order", { ascending: true });
+      if (data) setCategories(data);
+    }
+    fetchCategories();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -44,11 +66,15 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
       }
 
       const newUploadsPromises = validFiles.map(async file => {
-        // 이미지 비율 계산
-        const aspectRatio = await new Promise<number>((resolve) => {
+        // 이미지 크기 및 비율 계산
+        const { width, height, aspectRatio } = await new Promise<{ width: number; height: number; aspectRatio: number }>((resolve) => {
             const img = new Image();
-            img.onload = () => resolve(img.width / img.height);
-            img.onerror = () => resolve(1.0);
+            img.onload = () => resolve({ 
+              width: img.width, 
+              height: img.height, 
+              aspectRatio: img.width / img.height 
+            });
+            img.onerror = () => resolve({ width: 0, height: 0, aspectRatio: 1.0 });
             img.src = URL.createObjectURL(file);
         });
 
@@ -56,8 +82,10 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
             id: Math.random().toString(36).substring(7),
             file,
             title: file.name.split('.').slice(0, -1).join('.') || "제목 없음",
-            category: "Exterior" as const,
+            categoryId: "", // 초기값 빈 문자열
             aspectRatio,
+            width,
+            height,
             displayOrder: 0,
             status: "pending" as const,
             previewUrl: URL.createObjectURL(file),
@@ -81,7 +109,7 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
     });
   };
 
-  const updateMetadata = (id: string, updates: Partial<Pick<PendingUpload, "title" | "category" | "videoUrl" | "displayOrder">>) => {
+  const updateMetadata = (id: string, updates: Partial<Pick<PendingUpload, "title" | "categoryId" | "videoUrl" | "displayOrder">>) => {
     setUploads(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
   };
 
@@ -100,27 +128,27 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
     setIsProcessing(true);
     const pendingItems = uploads.filter(u => u.status !== "completed");
 
-    // 최솟값 조회 로직 (가장 앞번호를 따기 위해)
-    let minOrder = 0;
+    // 최댓값 조회 로직 (가장 뒷번호 다음에 추가)
+    let maxOrder = 0;
     try {
-        const { data: minOrderData, error: minOrderError } = await supabase
+        const { data: maxOrderData, error: maxOrderError } = await supabase
             .from("gallery")
             .select("display_order")
-            .order("display_order", { ascending: true })
+            .order("display_order", { ascending: false })
             .limit(1)
             .maybeSingle();
         
-        if (!minOrderError && minOrderData) {
-            minOrder = minOrderData.display_order || 0;
+        if (!maxOrderError && maxOrderData) {
+            maxOrder = maxOrderData.display_order || 0;
         }
     } catch (e) {
-        console.error("Min order fetch failed:", e);
+        console.error("Max order fetch failed:", e);
     }
 
-    let currentOrder = minOrder;
+    let currentOrder = maxOrder;
 
     for (const item of pendingItems) {
-      currentOrder -= 1; // 낮은 숫자가 먼저 나오므로 최솟값에서 차감하여 앞으로 보냄
+      currentOrder += 1; // 순서값을 1씩 증가시켜 양수로 유지
       // Update status to compressing
       setUploads(prev => prev.map(u => u.id === item.id ? { ...u, status: "compressing" } : u));
 
@@ -160,9 +188,12 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
             {
               title: item.title,
               src: publicUrl,
-              category: item.category,
+              category_id: item.categoryId || null, // 빈 문자열이면 null
               video_url: item.videoUrl || null,
+              type: item.videoUrl ? "video" : "image",
               aspect_ratio: item.aspectRatio,
+              width: item.width,
+              height: item.height,
               display_order: currentOrder, // 자동 부여된 순서 사용
             }
           ])
@@ -173,11 +204,13 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
 
         // 5. 상위 컴포넌트에 알림 및 상태 변경
         if (onAdd && dbData) {
+          const categoryName = categories.find(c => c.id === dbData.category_id)?.name;
           onAdd({
             id: dbData.id,
             title: dbData.title,
             src: dbData.src,
-            category: dbData.category,
+            category_id: dbData.category_id,
+            category_name: categoryName,
             video_url: dbData.video_url,
             aspect_ratio: dbData.aspect_ratio,
             display_order: dbData.display_order,
@@ -232,15 +265,15 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
               ref={fileInputRef}
             />
             <div className={`
-              border-2 border-dashed rounded-xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3
-              ${isProcessing ? "bg-zinc-50 border-zinc-200" : "bg-zinc-50/50 border-zinc-200 group-hover:border-zinc-400 group-hover:bg-zinc-50"}
+              border-2 border-dashed rounded-none p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3
+              ${isProcessing ? "bg-muted/50 border-border" : "bg-muted/20 border-border group-hover:border-primary/50 group-hover:bg-muted/30"}
             `}>
-              <div className="w-12 h-12 rounded-full bg-white  flex items-center justify-center text-zinc-400 group-hover:text-zinc-600 transition-colors">
+              <div className="w-12 h-12 rounded-none bg-background flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors border border-border">
                 <Upload size={24} />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold">클릭하거나 파일을 여기로 드래그하세요</p>
-                <p className="text-xs text-muted-foreground mt-1">다중 선택 가능 (JPG, PNG, WebP 등)</p>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-foreground">클릭하거나 파일을 여기로 드래그하세요</p>
+                <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-tight">다중 선택 가능 (JPG, PNG, WebP 등)</p>
               </div>
             </div>
           </div>
@@ -253,11 +286,11 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
               </div>
               <div className="grid gap-3">
                 {uploads.map((u) => (
-                  <div key={u.id} className="relative bg-white border border-border rounded-xl p-3 flex gap-4 items-center group overflow-hidden">
+                  <div key={u.id} className="relative bg-card border border-border rounded-none p-3 flex gap-4 items-center group overflow-hidden">
                     {/* Status Overlay for completion */}
                     {u.status === "completed" && (
-                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-20">
-                            <div className="flex items-center gap-2 text-green-600 font-bold text-sm">
+                        <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center z-20">
+                            <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-widest">
                                 <CheckCircle2 size={16} />
                                 업로드 완료
                             </div>
@@ -265,7 +298,7 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
                     )}
 
                     {/* Preview Thumbnail */}
-                    <div className="relative w-40 h-40 shrink-0 rounded-xl overflow-hidden bg-zinc-100 border border-border ">
+                    <div className="relative w-40 h-40 shrink-0 rounded-none overflow-hidden bg-muted border border-border ">
                       <img src={u.previewUrl} alt="Preview" className="w-full h-full object-cover" />
                       {isProcessing && (u.status === "compressing" || u.status === "uploading") && (
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -277,38 +310,39 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
                     {/* Metadata Inputs */}
                     <div className="flex-1 grid grid-cols-1 gap-4 py-2">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">이미지 제목</label>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">이미지 제목</label>
                         <Input
                           value={u.title}
                           onChange={(e) => updateMetadata(u.id, { title: e.target.value })}
-                          className="h-10 text-base rounded-lg border-zinc-200 focus:border-zinc-400 focus:ring-0 transition-all font-medium"
+                          className="h-10 text-sm rounded-none border-border focus:border-primary focus:ring-0 transition-all font-medium bg-background"
                           placeholder="작품 제목을 입력하세요"
                           disabled={isProcessing || u.status === "completed"}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">유튜브 링크 (선택 사항)</label>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">유튜브 링크 (선택 사항)</label>
                         <Input
                           value={u.videoUrl || ""}
                           onChange={(e) => updateMetadata(u.id, { videoUrl: e.target.value })}
-                          className="h-10 text-base rounded-lg border-zinc-200 focus:border-zinc-400 focus:ring-0 transition-all font-medium"
+                          className="h-10 text-sm rounded-none border-border focus:border-primary focus:ring-0 transition-all font-medium bg-background"
                           placeholder="https://www.youtube.com/watch?v=..."
                           disabled={isProcessing || u.status === "completed"}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">카테고리 설정</label>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">카테고리 설정</label>
                         <Select
-                          value={u.category}
-                          onValueChange={(val) => updateMetadata(u.id, { category: val as any })}
+                          value={u.categoryId}
+                          onValueChange={(val) => updateMetadata(u.id, { categoryId: val })}
                           disabled={isProcessing || u.status === "completed"}
                         >
-                          <SelectTrigger className="h-10 text-base rounded-lg bg-zinc-50 border-zinc-200">
-                            <SelectValue />
+                          <SelectTrigger className="h-10 text-sm rounded-none bg-background border-border">
+                            <SelectValue placeholder="카테고리 선택" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Exterior">익스테리어 (외부 전경)</SelectItem>
-                            <SelectItem value="Interior">인테리어 (내부 공간)</SelectItem>
+                          <SelectContent className="bg-popover border-border">
+                            {categories.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id} className="text-sm">{cat.name}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -325,7 +359,7 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
                              variant="ghost"
                              size="icon"
                              onClick={() => removeUpload(u.id)}
-                             className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                             className="h-8 w-8 rounded-none text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                              disabled={isProcessing}
                            >
                              <X size={16} />
@@ -343,7 +377,7 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
             <Button
               onClick={startBulkUpload}
               disabled={isProcessing}
-              className="w-full h-10 rounded-lg font-bold text-[11px] uppercase tracking-[0.2em] bg-zinc-900 hover:bg-zinc-800 text-white transition-all"
+              className="w-full h-12 rounded-none font-bold text-[11px] uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
             >
               {isProcessing ? (
                 <>
@@ -360,7 +394,7 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
           )}
 
           {allCompleted && (
-            <div className="p-4 rounded-xl bg-green-50 border border-green-100 flex items-center justify-between gap-4">
+            <div className="p-4 rounded-none bg-green-50 border border-green-100 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 text-green-700">
                     <CheckCircle2 size={24} />
                     <span className="font-semibold">{uploads.length}개의 이미지 업로드 완료!</span>

@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export function Navigation() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [scrollProgress, setScrollProgress] = useState(0);
+    const pathname = usePathname();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -22,26 +25,38 @@ export function Navigation() {
 
     return (
         <nav
-            className={`fixed top-0 left-0 w-full z-100 transition-all duration-500 flex items-center  ${
+            className={`fixed top-0 left-0 w-full z-100 transition-all duration-700 flex items-center ${
                 isScrolled
-                    ? "bg-background/80 backdrop-blur-xl border-b border-border/50 py-3 md:py-4 h-16 md:h-20"
-                    : "bg-background/0 py-5 md:py-8 min-h-[80px] md:min-h-[120px]"
+                    ? "bg-background/80 backdrop-blur-xl border-b border-border/50 h-16 md:h-20"
+                    : "bg-transparent h-24 md:h-32"
             }`}
         >
             <div className="w-full px-6 md:px-12 lg:px-20 mx-auto flex items-center justify-between">
                 {/* Brand */}
                 <Link
                     href="/"
-                    className="text-xl md:text-2xl font-black tracking-tighter text-foreground transition-base hover:opacity-70 flex items-center gap-2"
+                    className="text-xl md:text-3xl font-light tracking-tighter text-foreground transition-base hover:opacity-70 flex items-center gap-1.5"
                 >
-                    HORIZON
+                    <div className="relative w-8 h-8 md:w-10 md:h-10">
+                        <Image 
+                            src="/logo.svg" 
+                            alt="HORIZON Logo" 
+                            fill 
+                            className="object-contain"
+                        />
+                    </div>
+                    <span>HORIZON</span>
                 </Link>
 
                 {/* Simplified Navigation */}
                 <div className="flex items-center">
                     <Link
                         href="/contact"
-                        className="text-[10px] md:text-sm font-bold uppercase tracking-[0.4em] text-muted-foreground transition-base  px-6 py-2 hover:text-background"
+                        className={`text-[10px] md:text-sm font-bold transition-base px-6 py-2 ${
+                            pathname === "/contact" 
+                                ? "text-brand" 
+                                : "text-muted-foreground hover:text-brand"
+                        }`}
                     >
                         Contact
                     </Link>
@@ -49,7 +64,7 @@ export function Navigation() {
             </div>
 
             {/* Progress Bar at the absolute bottom */}
-            <div className={`absolute bottom-0 left-0 h-[1.5px] w-full bg-border/10 transition-opacity duration-500 ${isScrolled ? "opacity-100" : "opacity-0"}`}>
+            <div className={`absolute bottom-0 left-0 h-[2px] w-full bg-border/10 transition-opacity duration-500 ${isScrolled ? "opacity-100" : "opacity-0"}`}>
                 <motion.div
                     className="h-full bg-foreground"
                     style={{ width: `${scrollProgress}%` }}

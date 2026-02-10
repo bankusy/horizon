@@ -112,24 +112,24 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
         <div className="w-full lg:w-1/2 space-y-4">
           <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">배너 이미지 (2560px 권장)</Label>
           {preview ? (
-            <div className="relative aspect-video rounded-2xl overflow-hidden border bg-zinc-100 group">
+            <div className="relative aspect-video rounded-none overflow-hidden border border-border bg-muted group">
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
               <button
                 onClick={() => { setFile(null); setPreview(null); }}
-                className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-4 right-4 p-2 bg-background/80 text-foreground border border-border rounded-none opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X size={20} />
               </button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center aspect-video rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:border-zinc-300 transition-all cursor-pointer">
+            <label className="flex flex-col items-center justify-center aspect-video rounded-none border-2 border-dashed border-border bg-muted/20 hover:bg-muted/30 hover:border-primary/50 transition-all cursor-pointer">
               <div className="flex flex-col items-center gap-4 text-muted-foreground">
-                <div className="p-4 bg-white rounded-full  border">
-                  <Upload size={32} className="text-zinc-400" />
+                <div className="p-4 bg-background rounded-none border border-border">
+                  <Upload size={32} />
                 </div>
                 <div className="text-center">
-                  <p className="font-bold text-zinc-900">클릭하여 이미지 선택</p>
-                  <p className="text-xs">고화질 원본 배너 이미지를 권장합니다</p>
+                  <p className="font-bold text-foreground text-[11px] uppercase tracking-widest">클릭하여 이미지 선택</p>
+                  <p className="text-[10px] uppercase tracking-tight mt-1">고화질 원본 배너 이미지를 권장합니다</p>
                 </div>
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
@@ -140,29 +140,29 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
         {/* Right: Info Inputs */}
         <div className="w-full lg:w-1/2 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">메인 제목</Label>
+            <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">메인 제목</Label>
             <Input
               id="title"
               placeholder="예: Modern Serenity"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="h-12 text-lg font-medium rounded-xl focus-visible:ring-1 focus-visible:ring-zinc-400"
+              className="h-12 text-lg font-medium rounded-none border-border bg-background focus-visible:ring-1 focus-visible:ring-primary/20"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="desc" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">서브 설명</Label>
+            <Label htmlFor="desc" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">서브 설명</Label>
             <Textarea
               id="desc"
               placeholder="배너에 표시될 짧은 설명을 입력하세요"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[120px] rounded-xl resize-none py-4 text-base focus-visible:ring-1 focus-visible:ring-zinc-400"
+              className="min-h-[120px] rounded-none border-border bg-background resize-none py-4 text-base focus-visible:ring-1 focus-visible:ring-primary/20"
             />
           </div>
           <Button
             onClick={handleUpload}
             disabled={isUploading || !file || !title}
-            className="w-full h-14 rounded-xl text-base font-bold bg-zinc-900 hover:bg-black transition-all "
+            className="w-full h-14 rounded-none text-[11px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
           >
             {isUploading ? (
               <>

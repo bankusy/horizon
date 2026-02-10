@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -56,14 +57,19 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-6">
       <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
-        <div className="flex items-center justify-center mb-8 gap-3">
-            <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center">
-                <span className="text-white font-black text-sm">H</span>
+        <div className="flex items-center justify-center mb-8 gap-1.5">
+            <div className="relative w-8 h-8">
+                <Image
+                    src="/logo.svg"
+                    alt="HORIZON Logo"
+                    fill
+                    className="object-contain"
+                />
             </div>
-            <h1 className="text-xl font-black tracking-tighter italic">HORIZON STUDIO</h1>
+            <h1 className="text-xl font-light tracking-tighter uppercase italic">HORIZON</h1>
         </div>
 
-        <Card className="rounded-2xl border-border  overflow-hidden">
+        <Card className="rounded-none border-border  overflow-hidden">
           <CardHeader className="p-8 pb-0 space-y-2">
             <CardTitle className="text-2xl font-bold tracking-tight">관리자 로그인</CardTitle>
             <CardDescription className="text-sm">계정 정보를 입력하여 대시보드에 접근하세요.</CardDescription>
@@ -78,7 +84,7 @@ export default function LoginPage() {
                     placeholder="Username" 
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="pl-10 h-12 rounded-xl bg-zinc-50/50 border-zinc-200 focus:border-zinc-900 transition-all font-medium"
+                    className="pl-10 h-12 rounded-none bg-zinc-50/50 border-zinc-200 focus:border-zinc-900 transition-all font-medium"
                     required
                   />
                 </div>
@@ -93,7 +99,7 @@ export default function LoginPage() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 h-12 rounded-xl bg-zinc-50/50 border-zinc-200 focus:border-zinc-900 transition-all font-medium"
+                    className="pl-10 pr-10 h-12 rounded-none bg-zinc-50/50 border-zinc-200 focus:border-zinc-900 transition-all font-medium"
                     required
                   />
                   <button 
@@ -109,7 +115,7 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 disabled={isLoading}
-                className="w-full h-12 rounded-xl font-bold bg-zinc-900 hover:bg-black text-white transition-all mt-4"
+                className="w-full h-12 rounded-none font-bold bg-zinc-900 hover:bg-black text-white transition-all mt-4"
               >
                 {isLoading ? (
                   <>
