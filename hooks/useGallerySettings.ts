@@ -89,7 +89,7 @@ export function useGallerySettings(displayImages: GalleryImage[]) {
         };
     }, [columnSettings]);
 
-    // Distribute images into columns (Shortest column first logic)
+    // Distribute images into columns (Shortest column first with Left-Priority bias)
     const groupedColumns = useMemo(() => {
         const cols = Array.from(
             { length: columnCount },
@@ -98,23 +98,28 @@ export function useGallerySettings(displayImages: GalleryImage[]) {
         const heights = new Array(columnCount).fill(0);
 
         displayImages.forEach((img, idx) => {
-            // Find the shortest column
+            // Find the best column: shortest one, with a slight bias towards the left (smaller index)
+            let targetIndex = 0;
             let minHeight = heights[0];
-            let columnIndex = 0;
+
+            // A tiny threshold (epsilon) to give preference to leftmost columns
+            // when the height difference is negligible.
+            const threshold = 0.02; 
 
             for (let i = 1; i < columnCount; i++) {
-                if (heights[i] < minHeight) {
+                // If this column is significantly shorter than our current choice, switch to it
+                if (heights[i] < minHeight - threshold) {
                     minHeight = heights[i];
-                    columnIndex = i;
+                    targetIndex = i;
                 }
+                // If it's about the same or taller, we stick with the smaller index (leftmost)
             }
 
-            cols[columnIndex].push({ ...img, globalIdx: idx });
+            cols[targetIndex].push({ ...img, globalIdx: idx });
 
-            // Add aspect ratio height (1/aspect_ratio) to column height
-            // Default aspect ratio to 1 if missing for calculation
+            // Update column height based on aspect ratio
             const aspectRatio = img.aspect_ratio || 1;
-            heights[columnIndex] += 1 / aspectRatio;
+            heights[targetIndex] += 1 / aspectRatio;
         });
 
         return cols;
