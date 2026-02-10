@@ -90,7 +90,6 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
             id: Math.random().toString(36).substring(7),
             file,
             title: file.name.split('.').slice(0, -1).join('.') || "제목 없음",
-            title: file.name.split('.').slice(0, -1).join('.') || "제목 없음",
             categoryId: categories.length > 0 ? categories[0].id : "", // 첫 번째 카테고리 기본 선택
             aspectRatio,
             width,
