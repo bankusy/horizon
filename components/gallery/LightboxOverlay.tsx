@@ -237,7 +237,7 @@ export function LightboxOverlay({
 
                     <div className="absolute bottom-0 inset-x-0 z-60 bg-linear-to-t from-black/50 to-transparent">
                         {/* Sliding Indicators — separate row above info */}
-                        <div className="hidden md:flex justify-center px-6 md:px-8">
+                        <div className="flex justify-center px-6 md:px-8">
                             <div className="overflow-x-auto no-scrollbar max-w-[160px] md:max-w-[400px]">
                                 <div className="flex gap-2 md:gap-4 py-2 md:py-3">
                                     {Array.from({ length: totalCount }, (_, i) => {
