@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Settings, Info, LayoutGrid, Save, Loader2 } from "lucide-react";
+import { Settings, Info, LayoutGrid, Save, Loader2, Shuffle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ export default function AdminSettingsPage() {
     wide: 5,
   });
   const [borderRadius, setBorderRadius] = useState<number>(0);
+  const [isShuffled, setIsShuffled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -49,6 +50,16 @@ export default function AdminSettingsPage() {
 
         if (!radiusError && radiusData) {
             setBorderRadius(Number(radiusData.value) || 0);
+        }
+
+        const { data: shuffleData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "gallery_shuffle")
+          .single();
+
+        if (shuffleData?.value !== undefined) {
+          setIsShuffled(Boolean(shuffleData.value));
         }
       } catch (e) {
         console.error("Settings load failed:", e);
@@ -81,6 +92,15 @@ export default function AdminSettingsPage() {
         });
       
       if (error || radiusError) throw error || radiusError;
+
+      await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "gallery_shuffle", 
+          value: isShuffled,
+          updated_at: new Date().toISOString()
+        });
+
       toast.success("설정이 저장되었습니다.");
     } catch (e) {
       console.error("Settings save failed:", e);
@@ -196,6 +216,55 @@ export default function AdminSettingsPage() {
                 </div>
               </>
             )}
+          </CardContent>
+        </Card>
+
+        {/* 갤러리 표시 설정 */}
+        <Card className="rounded-none border-border bg-card overflow-hidden">
+          <CardHeader className="p-8 border-b border-border bg-secondary/20">
+            <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3 text-foreground">
+              <Shuffle size={24} className="text-primary" />
+              갤러리 표시 설정
+            </CardTitle>
+            <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-1">
+              이미지 표시 순서를 설정합니다.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-bold">이미지 셔플</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                  활성화하면 갤러리 이미지가 랜덤 순서로 표시됩니다.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsShuffled(!isShuffled)}
+                className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                  isShuffled ? "bg-primary" : "bg-secondary border border-border"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                    isShuffled ? "translate-x-7" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="flex justify-end pt-8 mt-8 border-t border-border">
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="rounded-none px-10 h-12 font-black uppercase tracking-widest text-[11px] transition-all duration-500"
+              >
+                {isSaving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4 stroke-3" />
+                )}
+                표시 설정 저장
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

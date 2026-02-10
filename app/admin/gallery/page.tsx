@@ -429,9 +429,7 @@ export default function GalleryManagementPage() {
                     .from("banners")
                     .update({ display_order: currentBanner.display_order })
                     .eq("id", targetBanner.id);
-
                 if (error1 || error2) throw error1 || error2;
-
                 setBanners(prev => prev.map(b => {
                     if (b.id === id) return { ...b, display_order: newOrder };
                     if (b.id === targetBanner.id) return { ...b, display_order: currentBanner.display_order };
