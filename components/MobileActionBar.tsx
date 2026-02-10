@@ -9,7 +9,7 @@ export default function MobileActionBar() {
   return (
     <>
       {/* Mobile Bottom Bar — md 이상에서는 숨김 */}
-      <div className="fixed bottom-0 inset-x-0 z-100 md:hidden">
+      <div className="fixed bottom-0 inset-x-0 z-500 md:hidden">
         <div className="bg-zinc-950/95 backdrop-blur-xl border-t border-white/10 safe-area-bottom">
           <div className="flex items-center justify-around h-14">
             {/* 전화 */}

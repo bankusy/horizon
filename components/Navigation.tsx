@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { Portal } from "@/components/ui/portal";
 
 export function Navigation() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -36,7 +37,7 @@ export function Navigation() {
 
     return (
         <nav
-            className={`fixed top-0 left-0 w-full z-1000 transition-all duration-700 flex items-center ${
+            className={`fixed top-0 left-0 w-full z-2000 transition-all duration-700 flex items-center ${
                 isScrolled
                     ? "bg-background/80 backdrop-blur-xl border-b border-border/50 h-16 md:h-20"
                     : "bg-transparent h-24 md:h-32"
@@ -87,24 +88,24 @@ export function Navigation() {
                 {/* Mobile Menu Button - Increased z-index */}
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="md:hidden p-2 text-foreground focus:outline-none z-2002"
+                    className="md:hidden p-2 text-foreground focus:outline-none z-2001"
                     aria-label="Toggle Menu"
                 >
                     {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
                 </button>
             </div>
 
-            {/* Mobile Menu Backdrop & Drawer */}
+            {/* Mobile Menu Backdrop & Drawer - Using Portal to be truly on top */}
             <AnimatePresence>
                 {isMenuOpen && (
-                    <>
+                    <Portal>
                         {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsMenuOpen(false)}
-                            className="fixed inset-0 z-2000 bg-black/60 backdrop-blur-sm md:hidden"
+                            className="fixed inset-0 z-3499 bg-black/60 backdrop-blur-sm md:hidden"
                         />
 
                         {/* Side Drawer Panel */}
@@ -113,7 +114,7 @@ export function Navigation() {
                             animate={{ x: 0 }}
                             exit={{ x: "100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="fixed top-0 right-0 bottom-0 w-[80%] max-w-sm z-2001 bg-background border-l border-border flex flex-col p-12 md:hidden"
+                            className="fixed top-0 right-0 bottom-0 w-[80%] max-w-sm z-3500 bg-background border-l border-border flex flex-col p-12 md:hidden"
                         >
                             <div className="flex justify-end mb-12">
                                 <button
@@ -183,7 +184,7 @@ export function Navigation() {
                                Horizon Studio © {new Date().getFullYear()}
                             </motion.div>
                         </motion.div>
-                    </>
+                    </Portal>
                 )}
             </AnimatePresence>
 

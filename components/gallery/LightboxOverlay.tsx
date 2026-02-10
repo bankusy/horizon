@@ -15,6 +15,7 @@ import {
 import Image from "next/image";
 import { GalleryImage } from "@/types/gallery";
 import { getYoutubeId } from "@/hooks/useGalleryData";
+import { Portal } from "@/components/ui/portal";
 
 interface LightboxOverlayProps {
     lightboxIndex: number | null;
@@ -49,272 +50,215 @@ export function LightboxOverlay({
     nextLightbox,
     prevLightbox,
 }: LightboxOverlayProps) {
+    const isOpen = lightboxIndex !== null && displayImages[lightboxIndex];
+
     return (
         <AnimatePresence>
-            {lightboxIndex !== null && displayImages[lightboxIndex] && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-500 bg-zinc-950 h-dvh flex flex-col"
-                >
-                    <div className="absolute top-0 inset-x-0 h-20 md:h-24 px-6 md:px-8 flex items-center justify-end z-60 pointer-events-none">
-                        {/* Top Right Controls Group */}
-                        <div className="flex items-center gap-2 md:gap-4 pointer-events-auto">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsAutoPlaying(!isAutoPlaying);
-                                }}
-                                className={`p-2 md:p-3 rounded-full border transition-all duration-500 ${
-                                    isAutoPlaying
-                                        ? "bg-white text-black border-white shadow-xl"
-                                        : "bg-white/5 text-white border-white/10 hover:bg-white/10"
-                                }`}
-                                title={
-                                    isAutoPlaying
-                                        ? "Pause AutoPlay"
-                                        : "Start AutoPlay"
-                                }
-                            >
-                                {isAutoPlaying ? (
-                                    <Pause size={20} fill="currentColor" />
-                                ) : (
-                                    <Play size={20} fill="currentColor" />
-                                )}
-                            </button>
-                            <div className="h-6 w-px bg-white/20 mx-2" />
-                            <button
-                                onClick={handleZoomIn}
-                                className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-95 transition-all duration-300 border border-white/10"
-                                title="Zoom In (+)"
-                            >
-                                <Plus size={20} />
-                            </button>
-                            <button
-                                onClick={handleZoomOut}
-                                className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-95 transition-all duration-300 border border-white/10"
-                                title="Zoom Out (-)"
-                            >
-                                <Minus size={20} />
-                            </button>
-                            <button
-                                onClick={handleResetZoom}
-                                className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-95 transition-all duration-300 border border-white/10"
-                                title="Fit Screen (0)"
-                            >
-                                <Maximize size={20} />
-                            </button>
-                            <button
-                                onClick={toggleFullscreen}
-                                className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-95 transition-all duration-300 border border-white/10"
-                                title="Fullscreen (f)"
-                            >
-                                <Expand size={20} />
-                            </button>
-                            <div className="h-6 w-px bg-white/20 mx-2" />
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setLightboxIndex(null);
-                                    setZoomLevel(1);
-                                }}
-                                className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 hover:rotate-90 transition-all duration-500 border border-white/10"
-                                title="Close"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 relative flex items-center justify-center">
-                        <button
-                            onClick={prevLightbox}
-                            className="absolute left-4 md:left-8 z-60 p-2 md:p-3 rounded-full bg-white/5 border border-white/5 text-white hover:bg-white/10 hover:scale-105 active:scale-95 transition-all duration-500"
+            {isOpen && (
+                <>
+                    {/* 1. Content Layer (Background & Image) - z-1000 */}
+                    <Portal>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-3000 bg-zinc-950 h-dvh flex flex-col"
                         >
-                            <ChevronLeft size={24} />
-                        </button>
+                            <div className="flex-1 relative flex items-center justify-center">
+                                {/* Navigation Arrows - Also in content layer but need higher z than image */}
+                                <button
+                                    onClick={prevLightbox}
+                                    className="absolute left-4 md:left-8 z-10 p-2 md:p-3 rounded-full bg-white/5 border border-white/5 text-white hover:bg-white/10 hover:scale-105 active:scale-95 transition-all duration-500"
+                                >
+                                    <ChevronLeft size={24} />
+                                </button>
 
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={displayImages[lightboxIndex].id}
-                                initial={{
-                                    opacity: 0,
-                                    scale: 0.95,
-                                    filter: "blur(10px)",
-                                }}
-                                animate={{
-                                    opacity: 1,
-                                    scale: 1,
-                                    filter: "blur(0px)",
-                                }}
-                                transition={{
-                                    duration: 0.8,
-                                    ease: [0.22, 1, 0.36, 1],
-                                }}
-                                className="relative w-full h-full flex items-center justify-center font-inter select-none"
-                                drag="x"
-                                dragConstraints={{ left: 0, right: 0 }}
-                                dragElastic={0.2}
-                                onDragEnd={(_, info) => {
-                                    if (info.offset.x < -50) nextLightbox();
-                                    else if (info.offset.x > 50) prevLightbox();
-                                }}
-                            >
-                                <div className="relative w-full h-full flex items-center justify-center py-20 px-4 md:py-24 md:px-12 pointer-events-none">
-                                    <div className="relative w-full h-full pointer-events-auto flex items-center justify-center">
-                                        {displayImages[lightboxIndex].video_url ? (
-                                            <div className="relative w-full h-full max-w-6xl aspect-video overflow-hidden shadow-2xl bg-black rounded-lg">
-                                                {/* Mobile Player: Controls Enabled, No Overlay */}
-                                                <div className="block md:hidden w-full h-full">
-                                                    <iframe
-                                                        width="100%"
-                                                        height="100%"
-                                                        src={`https://www.youtube.com/embed/${getYoutubeId(
-                                                            displayImages[
-                                                                lightboxIndex
-                                                            ].video_url!
-                                                        )}?autoplay=1&controls=1&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&showinfo=0&mute=0&vq=hd1080&playsinline=1`}
-                                                        title="YouTube video player"
-                                                        frameBorder="0"
-                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                        allowFullScreen
-                                                        className="w-full h-full scale-[1.0] origin-center object-contain"
-                                                    />
-                                                </div>
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={displayImages[lightboxIndex!].id}
+                                        initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+                                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                                        className="relative w-full h-full flex items-center justify-center font-inter select-none"
+                                        drag="x"
+                                        dragConstraints={{ left: 0, right: 0 }}
+                                        dragElastic={0.2}
+                                        onDragEnd={(_, info) => {
+                                            if (info.offset.x < -50) nextLightbox();
+                                            else if (info.offset.x > 50) prevLightbox();
+                                        }}
+                                    >
+                                        <div className="relative w-full h-full flex items-center justify-center py-20 px-4 md:py-24 md:px-12 pointer-events-none">
+                                            <div className="relative w-full h-full pointer-events-auto flex items-center justify-center">
+                                                {displayImages[lightboxIndex!].video_url ? (
+                                                    <div className="relative w-full h-full max-w-6xl aspect-video overflow-hidden shadow-2xl bg-black rounded-lg">
+                                                        <div className="block md:hidden w-full h-full">
+                                                            <iframe
+                                                                width="100%"
+                                                                height="100%"
+                                                                src={`https://www.youtube.com/embed/${getYoutubeId(displayImages[lightboxIndex!].video_url!)}?autoplay=1&controls=1&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&showinfo=0&mute=0&vq=hd1080&playsinline=1`}
+                                                                title="YouTube video player"
+                                                                frameBorder="0"
+                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                allowFullScreen
+                                                                className="w-full h-full object-contain"
+                                                            />
+                                                        </div>
+                                                        <div className="hidden md:block w-full h-full relative">
+                                                            <iframe
+                                                                width="100%"
+                                                                height="100%"
+                                                                src={`https://www.youtube.com/embed/${getYoutubeId(displayImages[lightboxIndex!].video_url!)}?autoplay=1&controls=0&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&showinfo=0&mute=0&vq=hd1080&playsinline=1`}
+                                                                title="YouTube video player"
+                                                                frameBorder="0"
+                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                allowFullScreen
+                                                                className="w-full h-full object-contain"
+                                                            />
+                                                            <div className="absolute inset-0 z-10 bg-transparent cursor-default" />
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="relative w-full h-full">
+                                                        <Image
+                                                            fill
+                                                            className="object-contain transition-transform duration-300 ease-out select-none"
+                                                            draggable={false}
+                                                            onDragStart={(e) => e.preventDefault()}
+                                                            style={{ transform: `scale(${zoomLevel})`, pointerEvents: "none" }}
+                                                            src={displayImages[lightboxIndex!].src}
+                                                            alt={displayImages[lightboxIndex!].alt}
+                                                            priority
+                                                            sizes="100vw"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                </AnimatePresence>
 
-                                                {/* Desktop Player: Controls Disabled, Fixed Overlay */}
-                                                <div className="hidden md:block w-full h-full relative">
-                                                    <iframe
-                                                        width="100%"
-                                                        height="100%"
-                                                        src={`https://www.youtube.com/embed/${getYoutubeId(
-                                                            displayImages[
-                                                                lightboxIndex
-                                                            ].video_url!
-                                                        )}?autoplay=1&controls=0&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&showinfo=0&mute=0&vq=hd1080&playsinline=1`}
-                                                        title="YouTube video player"
-                                                        frameBorder="0"
-                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                        allowFullScreen
-                                                        className="w-full h-full scale-[1.0] origin-center object-contain"
+                                <button
+                                    onClick={nextLightbox}
+                                    className="absolute right-4 md:right-8 z-10 p-2 md:p-3 rounded-full bg-white/5 border border-white/5 text-white hover:bg-white/10 hover:scale-105 active:scale-95 transition-all duration-500"
+                                >
+                                    <ChevronRight size={24} />
+                                </button>
+                            </div>
+
+                            {/* Bottom Info Row - Also in content layer */}
+                            <div className="absolute bottom-0 inset-x-0 z-10 bg-linear-to-t from-black/50 to-transparent">
+                                <div className="flex justify-center px-6 md:px-8">
+                                    <div className="overflow-x-auto no-scrollbar max-w-[160px] md:max-w-[400px]">
+                                        <div className="flex gap-2 md:gap-4 py-2 md:py-3">
+                                            {Array.from({ length: totalCount }, (_, i) => {
+                                                const isLoaded = i < displayImages.length;
+                                                const isActive = i === lightboxIndex;
+                                                return (
+                                                    <button
+                                                        key={i}
+                                                        ref={(el) => {
+                                                            if (isActive && el) el.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (isLoaded) setLightboxIndex(i);
+                                                        }}
+                                                        className={`h-px transition-all duration-500 rounded-full shrink-0 ${
+                                                            isActive ? "w-8 md:w-16 bg-brand" : isLoaded ? "w-2 md:w-4 bg-white/10 hover:bg-white/30" : "w-2 md:w-4 bg-white/5 cursor-default"
+                                                        }`}
                                                     />
-                                                    <div className="absolute inset-0 z-10 bg-transparent cursor-default" />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="relative w-full h-full">
-                                                <Image
-                                                    fill
-                                                    className="object-contain transition-transform duration-300 ease-out select-none"
-                                                    draggable={false}
-                                                    onDragStart={(e: React.DragEvent) => e.preventDefault()}
-                                                    style={{
-                                                        transform: `scale(${zoomLevel})`,
-                                                        pointerEvents: "none",
-                                                    }}
-                                                    src={
-                                                        lightboxIndex !== null
-                                                            ? displayImages[
-                                                                  lightboxIndex
-                                                              ].src
-                                                            : ""
-                                                    }
-                                                    alt={
-                                                        lightboxIndex !== null
-                                                            ? displayImages[
-                                                                  lightboxIndex
-                                                              ].alt
-                                                            : ""
-                                                    }
-                                                    priority
-                                                    sizes="100vw"
-                                                />
-                                            </div>
-                                        )}
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
-                            </motion.div>
-                        </AnimatePresence>
+                                <div className="flex items-center justify-between px-6 md:px-8 pb-4 md:pb-6">
+                                    <div className="flex flex-col justify-center text-white pointer-events-none min-w-0 flex-1 mr-4">
+                                        <p className="text-[8px] md:text-[10px] font-black tracking-[0.5em] md:tracking-[1em] uppercase opacity-30 mb-0.5 md:mb-1 truncate">
+                                            {displayImages[lightboxIndex!].category_name}
+                                        </p>
+                                        <div className="flex items-baseline gap-2 md:gap-4">
+                                            <h2 className="text-sm md:text-xl font-light tracking-wider md:tracking-widest uppercase opacity-90 truncate">
+                                                {displayImages[lightboxIndex!].alt}
+                                            </h2>
+                                        </div>
+                                    </div>
+                                    <p className="text-white/20 text-[8px] md:text-[10px] font-black tracking-[0.5em] md:tracking-[1em] uppercase shrink-0">
+                                        <span className="text-brand opacity-100">{String(lightboxIndex! + 1).padStart(2, "0")}</span> / {String(totalCount).padStart(2, "0")}
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </Portal>
 
-                        <button
-                            onClick={nextLightbox}
-                            className="absolute right-4 md:right-8 z-60 p-2 md:p-3 rounded-full bg-white/5 border border-white/5 text-white hover:bg-white/10 hover:scale-105 active:scale-95 transition-all duration-500"
+                    {/* 2. Tool Layer (Controls) - z-4000 (Top of everything) */}
+                    <Portal>
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="fixed top-0 inset-x-0 h-20 md:h-24 px-6 md:px-8 flex items-center justify-end z-4000 pointer-events-none"
                         >
-                            <ChevronRight size={24} />
-                        </button>
-                    </div>
-
-                    <div className="absolute bottom-0 inset-x-0 z-60 bg-linear-to-t from-black/50 to-transparent">
-                        {/* Sliding Indicators — separate row above info */}
-                        <div className="flex justify-center px-6 md:px-8">
-                            <div className="overflow-x-auto no-scrollbar max-w-[160px] md:max-w-[400px]">
-                                <div className="flex gap-2 md:gap-4 py-2 md:py-3">
-                                    {Array.from({ length: totalCount }, (_, i) => {
-                                        const isLoaded = i < displayImages.length;
-                                        const isActive = i === lightboxIndex;
-                                        return (
-                                            <button
-                                                key={i}
-                                                ref={(el) => {
-                                                    if (isActive && el) {
-                                                        el.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
-                                                    }
-                                                }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (isLoaded) setLightboxIndex(i);
-                                                }}
-                                                className={`h-px transition-all duration-500 rounded-full shrink-0 ${
-                                                    isActive
-                                                        ? "w-8 md:w-16 bg-brand"
-                                                        : isLoaded
-                                                            ? "w-2 md:w-4 bg-white/10 hover:bg-white/30"
-                                                            : "w-2 md:w-4 bg-white/5 cursor-default"
-                                                }`}
-                                            />
-                                        );
-                                    })}
-                                </div>
+                            <div className="flex items-center gap-2 md:gap-4 pointer-events-auto">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsAutoPlaying(!isAutoPlaying);
+                                    }}
+                                    className={`p-2 md:p-3 rounded-full border transition-all duration-500 ${
+                                        isAutoPlaying ? "bg-white text-black border-white shadow-xl" : "bg-white/5 text-white border-white/10 hover:bg-white/10"
+                                    }`}
+                                    title={isAutoPlaying ? "Pause AutoPlay" : "Start AutoPlay"}
+                                >
+                                    {isAutoPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
+                                </button>
+                                <div className="h-6 w-px bg-white/20 mx-2" />
+                                <button
+                                    onClick={handleZoomIn}
+                                    className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-95 transition-all duration-300 border border-white/10"
+                                    title="Zoom In (+)"
+                                >
+                                    <Plus size={20} />
+                                </button>
+                                <button
+                                    onClick={handleZoomOut}
+                                    className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-95 transition-all duration-300 border border-white/10"
+                                    title="Zoom Out (-)"
+                                >
+                                    <Minus size={20} />
+                                </button>
+                                <button
+                                    onClick={handleResetZoom}
+                                    className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-95 transition-all duration-300 border border-white/10"
+                                    title="Fit Screen (0)"
+                                >
+                                    <Maximize size={20} />
+                                </button>
+                                <button
+                                    onClick={toggleFullscreen}
+                                    className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-95 transition-all duration-300 border border-white/10"
+                                    title="Fullscreen (f)"
+                                >
+                                    <Expand size={20} />
+                                </button>
+                                <div className="h-6 w-px bg-white/20 mx-2" />
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setLightboxIndex(null);
+                                        setZoomLevel(1);
+                                    }}
+                                    className="p-2 md:p-3 bg-white/5 rounded-full text-white hover:bg-white/10 hover:rotate-90 transition-all duration-500 border border-white/10"
+                                    title="Close"
+                                >
+                                    <X size={20} />
+                                </button>
                             </div>
-                        </div>
-
-                        {/* Info + Page Count row */}
-                        <div className="flex items-center justify-between px-6 md:px-8 pb-4 md:pb-6">
-                            {/* Info Section */}
-                            <div className="flex flex-col justify-center text-white pointer-events-none min-w-0 flex-1 mr-4">
-                                <p className="text-[8px] md:text-[10px] font-black tracking-[0.5em] md:tracking-[1em] uppercase opacity-30 mb-0.5 md:mb-1 truncate">
-                                    {displayImages[lightboxIndex].category_name}
-                                </p>
-                                <div className="flex items-baseline gap-2 md:gap-4">
-                                    <h2 className="text-sm md:text-xl font-light tracking-wider md:tracking-widest uppercase opacity-90 truncate">
-                                        {displayImages[lightboxIndex].alt}
-                                    </h2>
-                                    {displayImages[lightboxIndex].width &&
-                                        displayImages[lightboxIndex].height && (
-                                            <p className="text-[8px] md:text-[10px] font-bold tracking-[0.2em] opacity-40 shrink-0 hidden md:block">
-                                                {displayImages[lightboxIndex].width}*
-                                                {displayImages[lightboxIndex].height}
-                                            </p>
-                                        )}
-                                </div>
-                            </div>
-
-                            {/* Page Count */}
-                            <p className="text-white/20 text-[8px] md:text-[10px] font-black tracking-[0.5em] md:tracking-[1em] uppercase shrink-0">
-                                <span className="text-brand opacity-100">{String(lightboxIndex + 1).padStart(2, "0")}</span> /{" "}
-                                {String(totalCount).padStart(2, "0")}
-                            </p>
-                        </div>
-                    </div>
-
-
-                </motion.div>
+                        </motion.div>
+                    </Portal>
+                </>
             )}
         </AnimatePresence>
     );
 }
-
-
-
-
