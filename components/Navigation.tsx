@@ -36,7 +36,7 @@ export function Navigation() {
 
     return (
         <nav
-            className={`fixed top-0 left-0 w-full z-100 transition-all duration-700 flex items-center ${
+            className={`fixed top-0 left-0 w-full z-200 transition-all duration-700 flex items-center ${
                 isScrolled
                     ? "bg-background/80 backdrop-blur-xl border-b border-border/50 h-16 md:h-20"
                     : "bg-transparent h-24 md:h-32"
@@ -76,7 +76,7 @@ export function Navigation() {
                 {/* Mobile Menu Button - Increased z-index */}
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="md:hidden p-2 text-foreground focus:outline-none z-210"
+                    className="md:hidden p-2 text-foreground focus:outline-none z-310"
                     aria-label="Toggle Menu"
                 >
                     {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
@@ -91,7 +91,7 @@ export function Navigation() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: "100%" }}
                         transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
-                        className="fixed inset-0 z-200 bg-background/80 backdrop-blur-xl h-dvh flex flex-col items-center justify-center overflow-hidden"
+                        className="fixed inset-0 z-300 bg-background/80 backdrop-blur-xl h-dvh flex flex-col items-center justify-center overflow-hidden"
                     >
                         <div className="flex flex-col items-center gap-12">
                             <motion.div

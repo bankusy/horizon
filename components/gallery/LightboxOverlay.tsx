@@ -56,7 +56,7 @@ export function LightboxOverlay({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-150 bg-zinc-950 h-dvh flex flex-col"
+                    className="fixed inset-0 z-500 bg-zinc-950 h-dvh flex flex-col"
                 >
                     <div className="absolute top-0 inset-x-0 h-20 md:h-24 px-6 md:px-8 flex items-center justify-end z-60 pointer-events-none">
                         {/* Top Right Controls Group */}
