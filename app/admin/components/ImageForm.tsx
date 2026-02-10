@@ -51,7 +51,15 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
         .from("categories")
         .select("*")
         .order("display_order", { ascending: true });
-      if (data) setCategories(data);
+      if (data) {
+        setCategories(data);
+        // 기본값 설정 (첫 번째 카테고리)
+        if (data.length > 0) {
+            // 새로 추가되는 업로드 항목의 기본값을 위해 별도 상태 관리가 필요할 수 있으나,
+            // 여기서는 categories 로드 시점에만 체크. 
+            // 실제 개별 업로드 아이템 생성 시점에도 적용해야 함.
+        }
+      }
     }
     fetchCategories();
   }, []);
@@ -82,7 +90,8 @@ export function ImageForm({ onAdd }: { onAdd?: (data: { id: string; title: strin
             id: Math.random().toString(36).substring(7),
             file,
             title: file.name.split('.').slice(0, -1).join('.') || "제목 없음",
-            categoryId: "", // 초기값 빈 문자열
+            title: file.name.split('.').slice(0, -1).join('.') || "제목 없음",
+            categoryId: categories.length > 0 ? categories[0].id : "", // 첫 번째 카테고리 기본 선택
             aspectRatio,
             width,
             height,
