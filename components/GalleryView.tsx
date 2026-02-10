@@ -385,7 +385,7 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                                 <iframe
                                                                     width="100%"
                                                                     height="100%"
-                                                                    src={`https://www.youtube.com/embed/${getYoutubeId(img.video_url!)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYoutubeId(img.video_url!)}&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&vq=hd1080`}
+                                                                    src={`https://www.youtube.com/embed/${getYoutubeId(img.video_url!)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYoutubeId(img.video_url!)}&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&vq=hd1080&playsinline=1`}
                                                                     title="YouTube grid player"
                                                                     frameBorder="0"
                                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -410,7 +410,7 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                         />
                                                     )}
 
-                                                    <div className="absolute inset-x-0 bottom-0 p-2 opacity-100 md:inset-0 md:bg-white/40 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 flex items-end justify-end pointer-events-none md:p-2">
+                                                    <div className="absolute inset-x-0 bottom-0 p-2 opacity-0 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 flex items-end justify-end pointer-events-none md:p-2">
                                                         <div className="bg-black/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none px-2 py-1 md:px-0 md:py-0 rounded md:rounded-none">
                                                             <h3 className="text-[10px] md:text-sm font-bold tracking-widest md:tracking-[0.2em] opacity-90 uppercase text-white md:text-black underline decoration-1 underline-offset-4">
                                                                 {img.width && img.height ? `${img.width}*${img.height}(PX)` : ''}
@@ -480,6 +480,11 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                 <h2 className="text-sm md:text-base font-medium tracking-[0.2em] uppercase truncate max-w-[200px] md:max-w-none opacity-80">
                                     {displayImages[lightboxIndex].alt}
                                 </h2>
+                                {displayImages[lightboxIndex].width && displayImages[lightboxIndex].height && (
+                                    <p className="text-[10px] font-bold tracking-[0.2em] opacity-50 mt-1">
+                                        {displayImages[lightboxIndex].width}*{displayImages[lightboxIndex].height}(PX)
+                                    </p>
+                                )}
                             </div>
                             <div className="flex items-center gap-4 md:gap-6">
                                 <button

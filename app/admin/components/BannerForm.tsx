@@ -43,10 +43,10 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
     try {
       // 1. Compression (배너 이미지 200kb 제한 최적화)
       const options = {
-        maxSizeMB: 0.2, // 5MB -> 200kb로 대폭 최적화
+        maxSizeMB: 1, // 0.2MB -> 1MB (히어로 배너 화질 보장)
         maxWidthOrHeight: 2560,
         useWebWorker: true,
-        fileType: "image/webp",
+        fileType: "image/webp" as const,
         initialQuality: 0.8,
       };
       const compressedBlob = await imageCompression(file, options);
@@ -55,7 +55,8 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
       });
 
       // 2. Storage Upload
-      const fileName = `banners/${Date.now()}_${compressedFile.name}`;
+      // 'banners/' 폴더 대신 기존에 작동 확인된 'gallery/' 폴더 사용 (storage policy 이슈 방지)
+      const fileName = `gallery/banner_${Date.now()}_${compressedFile.name}`;
       const { data: storageData, error: storageError } = await supabase.storage
         .from("images")
         .upload(fileName, compressedFile);
@@ -66,16 +67,16 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
         .from("images")
         .getPublicUrl(fileName);
 
-      // 3. Database Insert (새 배너를 가장 처음에 배치하기 위해 최솟값 순서 조회)
-      let minOrder = 0;
+      // 3. Database Insert (새 배너를 가장 마지막에 배치)
+      let nextOrder = 1;
       try {
-        const { data: minData } = await supabase
+        const { data: maxData } = await supabase
           .from("banners")
           .select("display_order")
-          .order("display_order", { ascending: true })
+          .order("display_order", { ascending: false })
           .limit(1)
           .maybeSingle();
-        if (minData) minOrder = minData.display_order;
+        if (maxData) nextOrder = maxData.display_order + 1;
       } catch (e) {}
 
       const { data: dbData, error: dbError } = await supabase
@@ -85,7 +86,7 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
             title,
             description,
             src: publicUrl,
-            display_order: minOrder - 1,
+            display_order: nextOrder,
           },
         ])
         .select()

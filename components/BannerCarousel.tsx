@@ -34,7 +34,7 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
             setCurrentIndex((prev) => (prev + 1) % bannerItems.length);
         }, 5000);
         return () => clearInterval(timer);
-    }, [bannerItems.length]);
+    }, [bannerItems.length, currentIndex]);
 
     const nextSlide = () =>
         setCurrentIndex((prev) => (prev + 1) % bannerItems.length);
@@ -87,13 +87,10 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.2, duration: 1 }}
                         >
-                            <span className="text-[10px] md:text-xs font-bold tracking-[1em] uppercase mb-4 md:mb-6 block opacity-40">
-                                Visionary Space
-                            </span>
                             <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-6 md:mb-10 uppercase leading-[0.85] drop-shadow-2xl">
                                 {bannerItems[currentIndex]?.title}
                             </h1>
-                            <p className="text-base md:text-lg text-white/50 font-medium leading-relaxed tracking-wide max-w-xl mx-auto backdrop-blur-xs py-2">
+                            <p className="text-base md:text-lg text-white/50 font-medium leading-relaxed tracking-wide max-w-xl mx-auto py-2">
                                 {bannerItems[currentIndex]?.description}
                             </p>
                         </motion.div>

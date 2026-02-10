@@ -188,12 +188,12 @@ function BannerRow({ banner, isSelected, onSelectOne, onDelete, onUpdateOrder, i
             }`}
         >
             <div className="flex flex-col items-center gap-1 shrink-0 border-r border-border pr-4">
-               <Button
+                <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 rounded-none text-muted-foreground hover:text-primary disabled:opacity-20"
                     disabled={isFirst}
-                    onClick={() => onUpdateOrder?.(banner.id, banner.display_order - 1)}
+                    onClick={() => onUpdateOrder?.(banner.id, banner.display_order + 1)}
                 >
                     <ChevronUp size={14} />
                 </Button>
@@ -211,7 +211,7 @@ function BannerRow({ banner, isSelected, onSelectOne, onDelete, onUpdateOrder, i
                     size="icon"
                     className="h-6 w-6 rounded-none text-muted-foreground hover:text-primary disabled:opacity-20"
                     disabled={isLast}
-                    onClick={() => onUpdateOrder?.(banner.id, banner.display_order + 1)}
+                    onClick={() => onUpdateOrder?.(banner.id, banner.display_order - 1)}
                 >
                     <ChevronDown size={14} />
                 </Button>

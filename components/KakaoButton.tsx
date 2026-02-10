@@ -12,7 +12,7 @@ export default function KakaoButton() {
   return (
     <button
       onClick={openKakao}
-      className="fixed bottom-8 right-8 z-100 w-12 h-12 bg-[#FEE500] text-[#191919] flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 group rounded-md"
+      className="fixed bottom-8 right-8 z-100 w-12 h-12 bg-[#FEE500] text-[#191919] flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 group rounded-[6px]"
       aria-label="KakaoTalk Consultation"
     >
       <MessageSquare fill="#191919" size={24} className="group-hover:rotate-12 transition-transform" />

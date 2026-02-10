@@ -99,7 +99,7 @@ export default function GalleryManagementPage() {
                 const { data: bannerData, error: bannerError } = await supabase
                     .from("banners")
                     .select("*")
-                    .order("display_order", { ascending: true })
+                    .order("display_order", { ascending: false }) // 역순(최신순/높은번호순) 정렬
                     .order("created_at", { ascending: false });
 
                 if (bannerError) throw bannerError;
@@ -438,7 +438,7 @@ export default function GalleryManagementPage() {
                     if (b.id === id) return { ...b, display_order: newOrder };
                     if (b.id === targetBanner.id) return { ...b, display_order: currentBanner.display_order };
                     return b;
-                }).sort((a, b) => a.display_order - b.display_order));
+                }).sort((a, b) => b.display_order - a.display_order)); // 내림차순 정렬
                 
                 toast.success("배너 순서가 변경되었습니다.");
             } else {
@@ -451,7 +451,7 @@ export default function GalleryManagementPage() {
 
                 setBanners(prev => prev.map(b => 
                     b.id === id ? { ...b, display_order: newOrder } : b
-                ).sort((a, b) => a.display_order - b.display_order));
+                ).sort((a, b) => b.display_order - a.display_order)); // 내림차순 정렬
                 toast.success("배너 순서가 변경되었습니다.");
             }
         } catch (error) {
