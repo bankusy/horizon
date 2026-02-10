@@ -10,7 +10,7 @@ import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { MasonryGrid } from "@/components/gallery/MasonryGrid";
 import { LightboxOverlay } from "@/components/gallery/LightboxOverlay";
 
-export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
+export function GalleryView({ initialImages, nextCursor, itemsPerPage = 50 }: GalleryViewProps) {
     // Load shuffle setting independently (before useGalleryData)
     const [isShuffled, setIsShuffled] = useState(false);
     useEffect(() => {
@@ -39,7 +39,7 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
         isFetchingNextPage,
         isLoading,
         totalCount,
-    } = useGalleryData(initialImages, nextCursor, isShuffled);
+    } = useGalleryData(initialImages, nextCursor, itemsPerPage, isShuffled);
 
     const {
         columnCount,

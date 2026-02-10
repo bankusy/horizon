@@ -24,6 +24,7 @@ export default function AdminSettingsPage() {
   });
   const [borderRadius, setBorderRadius] = useState<number>(0);
   const [isShuffled, setIsShuffled] = useState<boolean>(false);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(50);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -60,6 +61,16 @@ export default function AdminSettingsPage() {
 
         if (shuffleData?.value !== undefined) {
           setIsShuffled(Boolean(shuffleData.value));
+        }
+
+        const { data: pagingData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "gallery_items_per_page")
+          .single();
+
+        if (pagingData?.value !== undefined) {
+          setItemsPerPage(Number(pagingData.value) || 50);
         }
       } catch (e) {
         console.error("Settings load failed:", e);
@@ -98,6 +109,14 @@ export default function AdminSettingsPage() {
         .upsert({ 
           key: "gallery_shuffle", 
           value: isShuffled,
+          updated_at: new Date().toISOString()
+        });
+
+      await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "gallery_items_per_page", 
+          value: itemsPerPage,
           updated_at: new Date().toISOString()
         });
 
@@ -251,6 +270,27 @@ export default function AdminSettingsPage() {
                 />
               </button>
             </div>
+
+            <div className="flex items-center justify-between pt-6 border-t border-border/50 mt-6">
+              <div className="space-y-1">
+                <p className="text-sm font-bold">페이지당 이미지 개수</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                  기본값 50. 초기 로딩 및 추가 로딩 시 가져올 이미지 개수를 설정합니다.
+                </p>
+              </div>
+              <div className="w-32">
+                <Input
+                  type="number"
+                  min={10}
+                  max={200}
+                  step={10}
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Math.max(10, parseInt(e.target.value) || 50))}
+                  className="h-10 rounded-lg text-right font-mono"
+                />
+              </div>
+            </div>
+            
             <div className="flex justify-end pt-8 mt-8 border-t border-border">
               <Button 
                 onClick={handleSave} 

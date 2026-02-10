@@ -18,10 +18,10 @@ const fetchGalleryPage = async ({
     categoryId = "All",
     categoriesMap = {} as Record<string, string>,
     allowedCategoryIds = null as string[] | null,
+    itemsPerPage = 50,
 }): Promise<{ images: GalleryImage[]; nextCursor: number | null; totalCount: number }> => {
     if (!supabase) return { images: [], nextCursor: null, totalCount: 0 };
 
-    const itemsPerPage = 50;
     const from = pageParam * itemsPerPage;
     const to = from + itemsPerPage - 1;
 
@@ -93,7 +93,7 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
     return result;
 }
 
-export function useGalleryData(initialImages: GalleryImage[], nextCursor: number | null, isShuffled: boolean = false) {
+export function useGalleryData(initialImages: GalleryImage[], nextCursor: number | null, itemsPerPage: number = 50, isShuffled: boolean = false) {
     const [selectedCategoryId, setSelectedCategoryId] = useState("All");
     const [categories, setCategories] = useState<Category[]>([]);
     const [categoriesMap, setCategoriesMap] = useState<Record<string, string>>(
@@ -132,13 +132,14 @@ export function useGalleryData(initialImages: GalleryImage[], nextCursor: number
     // React Query for professional caching & state management
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
         useInfiniteQuery({
-            queryKey: ["gallery", selectedCategoryId, categoriesMap, allowedCategoryIds],
+            queryKey: ["gallery", selectedCategoryId, categoriesMap, allowedCategoryIds, itemsPerPage],
             queryFn: ({ pageParam }) =>
                 fetchGalleryPage({
                     pageParam,
                     categoryId: selectedCategoryId,
                     categoriesMap,
                     allowedCategoryIds,
+                    itemsPerPage,
                 }),
             initialPageParam: 0,
             getNextPageParam: (lastPage) => lastPage.nextCursor,

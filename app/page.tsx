@@ -9,6 +9,15 @@ import { Footer } from "@/components/Footer";
 async function getInitialData() {
     if (!supabase) return { banners: [], initialImages: [], nextCursor: null };
 
+    // 0. 페이징 설정 조회 (기본값 50)
+    const { data: pagingData } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "gallery_items_per_page")
+        .single();
+    
+    const itemsPerPage = Number(pagingData?.value) || 50;
+
     // 1. 배너 데이터 페칭
     const { data: bannerData } = await supabase
         .from("banners")
@@ -16,8 +25,7 @@ async function getInitialData() {
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
 
-    // 2. 초기 갤러리 이미지 데이터 페칭 (첫 50개)
-    const itemsPerPage = 50;
+    // 2. 초기 갤러리 이미지 데이터 페칭 (설정된 개수만큼)
     const { data: imageData, count } = await supabase
         .from("gallery")
         .select("*", { count: "exact" })
@@ -30,6 +38,7 @@ async function getInitialData() {
         src: item.src,
         alt: item.title,
         category: item.category,
+        category_id: item.category_id,
         video_url: item.video_url,
         aspect_ratio: item.aspect_ratio || 1,
     })) || [];
@@ -40,11 +49,12 @@ async function getInitialData() {
         banners: bannerData || [],
         initialImages,
         nextCursor: hasNext ? 1 : null,
+        itemsPerPage,
     };
 }
 
 export default async function Home() {
-    const { banners, initialImages, nextCursor } = await getInitialData();
+    const { banners, initialImages, nextCursor, itemsPerPage } = await getInitialData();
 
     return (
         <div className="min-h-screen bg-background font-sans selection:bg-background selection:text-foreground overflow-x-hidden">
@@ -58,6 +68,7 @@ export default async function Home() {
                 <GalleryView 
                     initialImages={initialImages} 
                     nextCursor={nextCursor} 
+                    itemsPerPage={itemsPerPage}
                 />
             </main>
 

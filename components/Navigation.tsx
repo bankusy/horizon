@@ -60,7 +60,17 @@ export function Navigation() {
                 </Link>
 
                 {/* Desktop Navigation */}
-                <div className="hidden md:flex items-center">
+                <div className="hidden md:flex items-center gap-8">
+                    <Link
+                        href="/vr"
+                        className={`text-lg md:text-xl font-bold transition-base px-6 py-2 ${
+                            pathname === "/vr" 
+                                ? "text-brand" 
+                                : "text-muted-foreground hover:text-brand"
+                        }`}
+                    >
+                        VR
+                    </Link>
                     <Link
                         href="/contact"
                         className={`text-lg md:text-xl font-bold transition-base px-6 py-2 ${
@@ -83,59 +93,96 @@ export function Navigation() {
                 </button>
             </div>
 
-            {/* Mobile Menu Overlay - Increased z-index and h-dvh */}
+            {/* Mobile Menu Backdrop & Drawer */}
             <AnimatePresence>
                 {isMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, x: "100%" }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: "100%" }}
-                        transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
-                        className="fixed inset-0 z-300 bg-background/80 backdrop-blur-xl h-dvh flex flex-col items-center justify-center overflow-hidden"
-                    >
-                        <div className="flex flex-col items-center gap-12">
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1, duration: 0.5 }}
-                            >
-                                <Link
-                                    href="/"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className={`text-4xl font-black tracking-tighter uppercase ${
-                                        pathname === "/" ? "text-brand" : "text-foreground"
-                                    }`}
-                                >
-                                    Home
-                                </Link>
-                            </motion.div>
-                            
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2, duration: 0.5 }}
-                            >
-                                <Link
-                                    href="/contact"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className={`text-4xl font-black tracking-tighter uppercase ${
-                                        pathname === "/contact" ? "text-brand" : "text-foreground"
-                                    }`}
-                                >
-                                    Contact
-                                </Link>
-                            </motion.div>
-                        </div>
-
-                        <motion.div 
+                    <>
+                        {/* Backdrop */}
+                        <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="absolute bottom-12 text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase"
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="fixed inset-0 z-300 bg-black/60 backdrop-blur-sm md:hidden"
+                        />
+
+                        {/* Side Drawer Panel */}
+                        <motion.div
+                            initial={{ x: "100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "100%" }}
+                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                            className="fixed top-0 right-0 bottom-0 w-[80%] max-w-sm z-310 bg-background border-l border-border flex flex-col p-12 md:hidden"
                         >
-                           Horizon Studio © {new Date().getFullYear()}
+                            <div className="flex justify-end mb-12">
+                                <button
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="p-2 text-foreground/50 hover:text-foreground transition-colors"
+                                >
+                                    <X size={32} strokeWidth={1} />
+                                </button>
+                            </div>
+
+                            <div className="flex flex-col gap-10">
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                >
+                                    <Link
+                                        href="/"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className={`text-4xl font-black tracking-tighter uppercase ${
+                                            pathname === "/" ? "text-brand" : "text-foreground"
+                                        }`}
+                                    >
+                                        Home
+                                    </Link>
+                                </motion.div>
+                                
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.15 }}
+                                >
+                                    <Link
+                                        href="/vr"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className={`text-4xl font-black tracking-tighter uppercase ${
+                                            pathname === "/vr" ? "text-brand" : "text-foreground"
+                                        }`}
+                                    >
+                                        VR
+                                    </Link>
+                                </motion.div>
+
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    <Link
+                                        href="/contact"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className={`text-4xl font-black tracking-tighter uppercase ${
+                                            pathname === "/contact" ? "text-brand" : "text-foreground"
+                                        }`}
+                                    >
+                                        Contact
+                                    </Link>
+                                </motion.div>
+                            </div>
+
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                                className="mt-auto text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase"
+                            >
+                               Horizon Studio © {new Date().getFullYear()}
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
+                    </>
                 )}
             </AnimatePresence>
 

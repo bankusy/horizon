@@ -20,7 +20,8 @@ import {
   Settings, 
   ArrowLeft,
   User,
-  Tags
+  Tags,
+  Box
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -41,6 +42,11 @@ const items = [
     title: "카테고리 관리",
     url: "/admin/categories",
     icon: Tags,
+  },
+  {
+    title: "VR 관리",
+    url: "/admin/vr",
+    icon: Box,
   },
   {
     title: "설정",

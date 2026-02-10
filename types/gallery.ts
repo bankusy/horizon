@@ -21,4 +21,5 @@ export interface GalleryImage {
 export interface GalleryViewProps {
     initialImages: GalleryImage[];
     nextCursor: number | null;
+    itemsPerPage?: number;
 }

@@ -45,14 +45,14 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
 
     if (bannerItems.length === 0) {
         return (
-            <section className="relative aspect-21/9 w-full flex items-center justify-center bg-zinc-950/20">
+            <section className="relative aspect-16/7 w-full flex items-center justify-center bg-zinc-950/20">
                 <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
             </section>
         );
     }
 
     return (
-        <section className="relative aspect-21/9 w-full overflow-hidden group bg-muted/20">
+        <section className="relative aspect-16/7 w-full overflow-hidden group bg-muted/20">
             {!assetsLoaded && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-background">
                     <div className="flex flex-col items-center gap-4">
@@ -80,7 +80,7 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
                         alt={bannerItems[currentIndex]?.title || "Banner"}
                         priority
                     />
-                    <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent z-10" />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent z-10" />
                     <div className="relative z-20 text-center text-white px-6 max-w-5xl">
                         <motion.div
                             initial={{ y: 30, opacity: 0 }}

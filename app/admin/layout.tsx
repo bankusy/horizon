@@ -25,6 +25,7 @@ export default function AdminLayout({
     if (pathname === "/admin") return "대시보드";
     if (pathname === "/admin/gallery") return "갤러리 관리";
     if (pathname === "/admin/categories") return "카테고리 관리";
+    if (pathname === "/admin/vr") return "VR 관리";
     if (pathname === "/admin/settings") return "설정";
     return "대시보드";
   };
