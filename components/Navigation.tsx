@@ -61,16 +61,7 @@ export function Navigation() {
 
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex items-center gap-8">
-                    <Link
-                        href="/vr"
-                        className={`text-lg md:text-xl font-bold transition-base px-6 py-2 ${
-                            pathname === "/vr" 
-                                ? "text-brand" 
-                                : "text-muted-foreground hover:text-brand"
-                        }`}
-                    >
-                        VR
-                    </Link>
+                    
                     <Link
                         href="/contact"
                         className={`text-lg md:text-xl font-bold transition-base px-6 py-2 ${
@@ -80,6 +71,16 @@ export function Navigation() {
                         }`}
                     >
                         Contact
+                    </Link>
+                    <Link
+                        href="/vr"
+                        className={`text-lg md:text-xl font-bold transition-base px-6 py-2 ${
+                            pathname === "/vr" 
+                                ? "text-brand" 
+                                : "text-muted-foreground hover:text-brand"
+                        }`}
+                    >
+                        VR
                     </Link>
                 </div>
 
