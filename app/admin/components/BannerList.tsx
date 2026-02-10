@@ -17,6 +17,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import React, { useState, useEffect } from "react";
+import { revalidateHome } from "@/app/actions";
 
 interface Banner {
     id: string;
@@ -82,6 +83,7 @@ export function BannerList({
             }
 
             toast.success("배너가 정상적으로 삭제되었습니다.");
+            await revalidateHome();
             if (onDelete) onDelete(id);
         } catch (error: any) {
             console.error(error);

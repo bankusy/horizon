@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { revalidateHome } from "@/app/actions";
 import imageCompression from "browser-image-compression";
 
 export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
@@ -94,9 +95,13 @@ export function BannerForm({ onAdd }: { onAdd?: (banner: any) => void }) {
 
       if (dbError) throw dbError;
 
-      toast.success("새 배너가 등록되었습니다.");
+      if (onAdd) onAdd(dbData); // Use dbData as it's the result of the insert
+      
+      // Revalidate the home page
+      await revalidateHome();
 
-      if (onAdd) onAdd(dbData);
+      toast.success("배너가 성공적으로 등록되었습니다."); // Corrected typo from "등록공되었습니다."
+
       handleClear();
     } catch (error: any) {
       console.error(error);

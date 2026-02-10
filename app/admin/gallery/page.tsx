@@ -21,6 +21,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { revalidateHome } from "@/app/actions";
 
 interface Category {
     id: string;
@@ -262,6 +263,7 @@ export default function GalleryManagementPage() {
 
             setBanners(prev => prev.filter(b => !selectedBannerIds.includes(b.id)));
             setSelectedBannerIds([]);
+            await revalidateHome();
             toast.success(`${selectedBannerIds.length}개의 배너가 삭제되었습니다.`);
         } catch (error: any) {
             console.error("Banner batch delete error:", error);
@@ -436,6 +438,7 @@ export default function GalleryManagementPage() {
                     return b;
                 }).sort((a, b) => a.display_order - b.display_order)); // 오름차순 정렬
                 
+                await revalidateHome();
                 toast.success("배너 순서가 변경되었습니다.");
             } else {
                  const { error } = await supabase
@@ -448,6 +451,7 @@ export default function GalleryManagementPage() {
                 setBanners(prev => prev.map(b => 
                     b.id === id ? { ...b, display_order: newOrder } : b
                 ).sort((a, b) => a.display_order - b.display_order)); // 오름차순 정렬
+                await revalidateHome();
                 toast.success("배너 순서가 변경되었습니다.");
             }
         } catch (error) {
