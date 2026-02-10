@@ -36,7 +36,7 @@ export function Navigation() {
 
     return (
         <nav
-            className={`fixed top-0 left-0 w-full z-200 transition-all duration-700 flex items-center ${
+            className={`fixed top-0 left-0 w-full z-1000 transition-all duration-700 flex items-center ${
                 isScrolled
                     ? "bg-background/80 backdrop-blur-xl border-b border-border/50 h-16 md:h-20"
                     : "bg-transparent h-24 md:h-32"
@@ -87,7 +87,7 @@ export function Navigation() {
                 {/* Mobile Menu Button - Increased z-index */}
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="md:hidden p-2 text-foreground focus:outline-none z-310"
+                    className="md:hidden p-2 text-foreground focus:outline-none z-2002"
                     aria-label="Toggle Menu"
                 >
                     {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
@@ -104,7 +104,7 @@ export function Navigation() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsMenuOpen(false)}
-                            className="fixed inset-0 z-300 bg-black/60 backdrop-blur-sm md:hidden"
+                            className="fixed inset-0 z-2000 bg-black/60 backdrop-blur-sm md:hidden"
                         />
 
                         {/* Side Drawer Panel */}
@@ -113,7 +113,7 @@ export function Navigation() {
                             animate={{ x: 0 }}
                             exit={{ x: "100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="fixed top-0 right-0 bottom-0 w-[80%] max-w-sm z-310 bg-background border-l border-border flex flex-col p-12 md:hidden"
+                            className="fixed top-0 right-0 bottom-0 w-[80%] max-w-sm z-2001 bg-background border-l border-border flex flex-col p-12 md:hidden"
                         >
                             <div className="flex justify-end mb-12">
                                 <button

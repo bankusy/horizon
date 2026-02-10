@@ -45,14 +45,14 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
 
     if (bannerItems.length === 0) {
         return (
-            <section className="relative aspect-16/9 w-full flex items-center justify-center bg-zinc-950/20">
+            <section className="relative aspect-video w-full flex items-center justify-center bg-zinc-950/20">
                 <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
             </section>
         );
     }
 
     return (
-        <section className="relative aspect-16/9 w-full overflow-hidden group bg-muted/20">
+        <section className="relative aspect-video w-full overflow-hidden group bg-muted/20">
             {!assetsLoaded && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-background">
                     <div className="flex flex-col items-center gap-4">
