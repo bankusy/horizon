@@ -56,7 +56,7 @@ export function LightboxOverlay({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed min-h-dvh inset-0 z-150 bg-zinc-950/98 backdrop-blur-3xl flex flex-col"
+                    className="fixed inset-0 z-150 bg-zinc-950 h-dvh flex flex-col"
                 >
                     <div className="absolute top-0 inset-x-0 h-20 md:h-24 px-6 md:px-8 flex items-center justify-end z-60 pointer-events-none">
                         {/* Top Right Controls Group */}
@@ -235,62 +235,67 @@ export function LightboxOverlay({
                         </button>
                     </div>
 
-                    <div className="absolute bottom-0 inset-x-0 h-20 md:h-24 px-6 md:px-8 flex items-center justify-between z-60 bg-linear-to-t from-black/50 to-transparent">
-                        {/* Info Section (Moved to Bottom Bar) */}
-                        <div className="flex flex-col justify-center text-white pointer-events-none">
-                            <p className="text-[10px] font-black tracking-[1em] uppercase opacity-30 mb-1">
-                                {displayImages[lightboxIndex].category_name}
+                    <div className="absolute bottom-0 inset-x-0 z-60 bg-linear-to-t from-black/50 to-transparent">
+                        {/* Sliding Indicators — separate row above info */}
+                        <div className="flex justify-center px-6 md:px-8">
+                            <div className="overflow-x-auto no-scrollbar max-w-[160px] md:max-w-[400px]">
+                                <div className="flex gap-2 md:gap-4 py-2 md:py-3">
+                                    {Array.from({ length: totalCount }, (_, i) => {
+                                        const isLoaded = i < displayImages.length;
+                                        const isActive = i === lightboxIndex;
+                                        return (
+                                            <button
+                                                key={i}
+                                                ref={(el) => {
+                                                    if (isActive && el) {
+                                                        el.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+                                                    }
+                                                }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (isLoaded) setLightboxIndex(i);
+                                                }}
+                                                className={`h-px transition-all duration-500 rounded-full shrink-0 ${
+                                                    isActive
+                                                        ? "w-8 md:w-16 bg-brand"
+                                                        : isLoaded
+                                                            ? "w-2 md:w-4 bg-white/10 hover:bg-white/30"
+                                                            : "w-2 md:w-4 bg-white/5 cursor-default"
+                                                }`}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Info + Page Count row */}
+                        <div className="flex items-center justify-between px-6 md:px-8 pb-4 md:pb-6">
+                            {/* Info Section */}
+                            <div className="flex flex-col justify-center text-white pointer-events-none min-w-0 flex-1 mr-4">
+                                <p className="text-[8px] md:text-[10px] font-black tracking-[0.5em] md:tracking-[1em] uppercase opacity-30 mb-0.5 md:mb-1 truncate">
+                                    {displayImages[lightboxIndex].category_name}
+                                </p>
+                                <div className="flex items-baseline gap-2 md:gap-4">
+                                    <h2 className="text-sm md:text-xl font-light tracking-wider md:tracking-widest uppercase opacity-90 truncate">
+                                        {displayImages[lightboxIndex].alt}
+                                    </h2>
+                                    {displayImages[lightboxIndex].width &&
+                                        displayImages[lightboxIndex].height && (
+                                            <p className="text-[8px] md:text-[10px] font-bold tracking-[0.2em] opacity-40 shrink-0 hidden md:block">
+                                                {displayImages[lightboxIndex].width}*
+                                                {displayImages[lightboxIndex].height}
+                                            </p>
+                                        )}
+                                </div>
+                            </div>
+
+                            {/* Page Count */}
+                            <p className="text-white/20 text-[8px] md:text-[10px] font-black tracking-[0.5em] md:tracking-[1em] uppercase shrink-0">
+                                <span className="text-brand opacity-100">{String(lightboxIndex + 1).padStart(2, "0")}</span> /{" "}
+                                {String(totalCount).padStart(2, "0")}
                             </p>
-                            <div className="flex items-baseline gap-4">
-                                <h2 className="text-lg md:text-xl font-light tracking-widest uppercase opacity-90">
-                                    {displayImages[lightboxIndex].alt}
-                                </h2>
-                                {displayImages[lightboxIndex].width &&
-                                    displayImages[lightboxIndex].height && (
-                                        <p className="text-[10px] font-bold tracking-[0.2em] opacity-40">
-                                            {displayImages[lightboxIndex].width}*
-                                            {displayImages[lightboxIndex].height}
-                                        </p>
-                                    )}
-                            </div>
                         </div>
-
-                        {/* Sliding Indicators */}
-                        <div className="absolute left-1/2 -translate-x-1/2 overflow-x-auto no-scrollbar max-w-[200px] md:max-w-[400px]">
-                            <div className="flex gap-2 md:gap-4 py-4">
-                                {Array.from({ length: totalCount }, (_, i) => {
-                                    const isLoaded = i < displayImages.length;
-                                    const isActive = i === lightboxIndex;
-                                    return (
-                                        <button
-                                            key={i}
-                                            ref={(el) => {
-                                                if (isActive && el) {
-                                                    el.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
-                                                }
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (isLoaded) setLightboxIndex(i);
-                                            }}
-                                            className={`h-px transition-all duration-500 rounded-full shrink-0 ${
-                                                isActive
-                                                    ? "w-8 md:w-16 bg-brand"
-                                                    : isLoaded
-                                                        ? "w-2 md:w-4 bg-white/10 hover:bg-white/30"
-                                                        : "w-2 md:w-4 bg-white/5 cursor-default"
-                                            }`}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Right Side: Page Count */}
-                         <p className="text-white/20 text-[10px] font-black tracking-[1em] uppercase">
-                            <span className="text-brand opacity-100">{String(lightboxIndex + 1).padStart(2, "0")}</span> /{" "}
-                            {String(totalCount).padStart(2, "0")}
-                        </p>
                     </div>
 
 
