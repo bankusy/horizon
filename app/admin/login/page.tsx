@@ -45,7 +45,7 @@ export default function LoginPage() {
       localStorage.setItem("admin_session", "authenticated");
 
       toast.success("환영합니다, 관리자님!");
-      router.push("/admin");
+      router.push("/admin/gallery");
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error("로그인 처리 중 오류가 발생했습니다.");
