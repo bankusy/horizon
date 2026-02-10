@@ -56,18 +56,37 @@ export function useGallerySettings(displayImages: GalleryImage[]) {
     }, []);
 
     useEffect(() => {
+        const breakpoints = {
+            wide: "(min-width: 1536px)",
+            desktop: "(min-width: 1280px)",
+            tabletLarge: "(min-width: 1024px)",
+            tablet: "(min-width: 640px)",
+            mobile: "(max-width: 639px)",
+        };
+
         const updateColumns = () => {
-            const width = window.innerWidth;
-            if (width >= 1536) setColumnCount(columnSettings.wide);
-            else if (width >= 1280) setColumnCount(columnSettings.desktop);
-            else if (width >= 1024)
-                setColumnCount(Math.max(columnSettings.tablet, 2));
-            else if (width >= 640) setColumnCount(columnSettings.tablet);
+            if (window.matchMedia(breakpoints.wide).matches) setColumnCount(columnSettings.wide);
+            else if (window.matchMedia(breakpoints.desktop).matches) setColumnCount(columnSettings.desktop);
+            else if (window.matchMedia(breakpoints.tabletLarge).matches) setColumnCount(Math.max(columnSettings.tablet, 2));
+            else if (window.matchMedia(breakpoints.tablet).matches) setColumnCount(columnSettings.tablet);
             else setColumnCount(columnSettings.mobile);
         };
+
         updateColumns();
-        window.addEventListener("resize", updateColumns);
-        return () => window.removeEventListener("resize", updateColumns);
+
+        // Use media query listeners for much better performance than 'resize' event
+        const queries = Object.values(breakpoints).map(q => window.matchMedia(q));
+        queries.forEach(mql => {
+            if (mql.addEventListener) mql.addEventListener("change", updateColumns);
+            else mql.addListener(updateColumns); // Legacy
+        });
+
+        return () => {
+            queries.forEach(mql => {
+                if (mql.removeEventListener) mql.removeEventListener("change", updateColumns);
+                else mql.removeListener(updateColumns);
+            });
+        };
     }, [columnSettings]);
 
     // Distribute images into columns (Shortest column first logic)

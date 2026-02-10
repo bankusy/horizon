@@ -44,16 +44,18 @@ export function MasonryGrid({
                             return (
                                 <motion.div
                                     key={img.id}
+                                    layout
                                     ref={
                                         globalIdx === displayImages.length - 1
                                             ? lastImageRef
                                             : null
                                     }
-                                    initial={{ opacity: 0, y: 30 }}
+                                    initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{
-                                        duration: 0.7,
-                                        ease: [0.22, 1, 0.36, 1],
+                                        duration: 0.4,
+                                        ease: [0.23, 1, 0.32, 1],
+                                        layout: { duration: 0.3, ease: "easeOut" }
                                     }}
                                     onClick={() => {
                                         setLightboxIndex(globalIdx);

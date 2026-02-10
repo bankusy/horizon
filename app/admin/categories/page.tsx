@@ -27,12 +27,15 @@ import {
     GripVertical,
     Save,
     X,
+    Eye,
+    EyeOff,
 } from "lucide-react";
 
 interface Category {
     id: string;
     name: string;
     display_order: number;
+    show_in_all: boolean;
     created_at: string;
     _count?: number;
 }
@@ -309,6 +312,33 @@ export default function CategoriesPage() {
                                                 </span>
                                             </div>
                                         </div>
+                                        {/* All 탭 포함 토글 */}
+                                        <button
+                                            onClick={async () => {
+                                                if (!supabase) return;
+                                                const newValue = !category.show_in_all;
+                                                const { error } = await supabase
+                                                    .from("categories")
+                                                    .update({ show_in_all: newValue })
+                                                    .eq("id", category.id);
+                                                if (error) {
+                                                    toast.error("업데이트 실패: " + error.message);
+                                                    return;
+                                                }
+                                                setCategories(categories.map(c =>
+                                                    c.id === category.id ? { ...c, show_in_all: newValue } : c
+                                                ));
+                                                toast.success(newValue ? "All 탭에 포함됩니다." : "All 탭에서 제외됩니다.");
+                                            }}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-none border transition-all duration-300 text-[10px] font-black uppercase tracking-widest ${
+                                                category.show_in_all
+                                                    ? "bg-primary/10 border-primary/30 text-primary"
+                                                    : "bg-secondary/50 border-border text-muted-foreground"
+                                            }`}
+                                        >
+                                            {category.show_in_all ? <Eye size={14} /> : <EyeOff size={14} />}
+                                            All
+                                        </button>
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-500">
                                             <Button
                                                 variant="ghost"

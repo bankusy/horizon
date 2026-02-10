@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 
 export function Navigation() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [scrollProgress, setScrollProgress] = useState(0);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const pathname = usePathname();
 
     useEffect(() => {
@@ -22,6 +24,15 @@ export function Navigation() {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    // Prevent body scroll when menu is open
+    useEffect(() => {
+        if (isMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+    }, [isMenuOpen]);
 
     return (
         <nav
@@ -48,8 +59,8 @@ export function Navigation() {
                     <span>HORIZON</span>
                 </Link>
 
-                {/* Simplified Navigation */}
-                <div className="flex items-center">
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex items-center">
                     <Link
                         href="/contact"
                         className={`text-lg md:text-xl font-bold transition-base px-6 py-2 ${
@@ -61,7 +72,72 @@ export function Navigation() {
                         Contact
                     </Link>
                 </div>
+
+                {/* Mobile Menu Button - Increased z-index */}
+                <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="md:hidden p-2 text-foreground focus:outline-none z-210"
+                    aria-label="Toggle Menu"
+                >
+                    {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                </button>
             </div>
+
+            {/* Mobile Menu Overlay - Increased z-index and h-dvh */}
+            <AnimatePresence>
+                {isMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, x: "100%" }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: "100%" }}
+                        transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
+                        className="fixed inset-0 z-200 bg-background/80 backdrop-blur-xl h-dvh flex flex-col items-center justify-center overflow-hidden"
+                    >
+                        <div className="flex flex-col items-center gap-12">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1, duration: 0.5 }}
+                            >
+                                <Link
+                                    href="/"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className={`text-4xl font-black tracking-tighter uppercase ${
+                                        pathname === "/" ? "text-brand" : "text-foreground"
+                                    }`}
+                                >
+                                    Home
+                                </Link>
+                            </motion.div>
+                            
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2, duration: 0.5 }}
+                            >
+                                <Link
+                                    href="/contact"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className={`text-4xl font-black tracking-tighter uppercase ${
+                                        pathname === "/contact" ? "text-brand" : "text-foreground"
+                                    }`}
+                                >
+                                    Contact
+                                </Link>
+                            </motion.div>
+                        </div>
+
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            className="absolute bottom-12 text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase"
+                        >
+                           Horizon Studio © {new Date().getFullYear()}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Progress Bar at the absolute bottom */}
             <div className={`absolute bottom-0 left-0 h-[2px] w-full bg-border/10 transition-opacity duration-500 hidden md:block ${isScrolled ? "opacity-100" : "opacity-0"}`}>

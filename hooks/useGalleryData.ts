@@ -17,6 +17,7 @@ const fetchGalleryPage = async ({
     pageParam = 0,
     categoryId = "All",
     categoriesMap = {} as Record<string, string>,
+    allowedCategoryIds = null as string[] | null,
 }): Promise<{ images: GalleryImage[]; nextCursor: number | null; totalCount: number }> => {
     if (!supabase) return { images: [], nextCursor: null, totalCount: 0 };
 
@@ -33,6 +34,8 @@ const fetchGalleryPage = async ({
 
     if (categoryId !== "All") {
         query = query.eq("category_id", categoryId);
+    } else if (allowedCategoryIds && allowedCategoryIds.length > 0) {
+        query = query.in("category_id", allowedCategoryIds);
     }
 
     const { data, error, count } = await query;
@@ -96,6 +99,7 @@ export function useGalleryData(initialImages: GalleryImage[], nextCursor: number
     const [categoriesMap, setCategoriesMap] = useState<Record<string, string>>(
         {},
     );
+    const [allowedCategoryIds, setAllowedCategoryIds] = useState<string[] | null>(null);
     const [totalCount, setTotalCount] = useState(0);
 
     // 카테고리 목록 로드
@@ -104,15 +108,22 @@ export function useGalleryData(initialImages: GalleryImage[], nextCursor: number
             if (!supabase) return;
             const { data } = await supabase
                 .from("categories")
-                .select("id, name")
+                .select("id, name, show_in_all")
                 .order("display_order", { ascending: true });
             if (data) {
                 setCategories(data);
                 const map: Record<string, string> = {};
-                data.forEach((c: Category) => {
+                const allowedIds: string[] = [];
+                data.forEach((c: any) => {
                     map[c.id] = c.name;
+                    console.log(c.show_in_all);
+                    
+                    if (c.show_in_all !== false) {
+                        allowedIds.push(c.id);
+                    }
                 });
                 setCategoriesMap(map);
+                setAllowedCategoryIds(allowedIds);
             }
         }
         fetchCategories();
@@ -121,12 +132,13 @@ export function useGalleryData(initialImages: GalleryImage[], nextCursor: number
     // React Query for professional caching & state management
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
         useInfiniteQuery({
-            queryKey: ["gallery", selectedCategoryId, categoriesMap],
+            queryKey: ["gallery", selectedCategoryId, categoriesMap, allowedCategoryIds],
             queryFn: ({ pageParam }) =>
                 fetchGalleryPage({
                     pageParam,
                     categoryId: selectedCategoryId,
                     categoriesMap,
+                    allowedCategoryIds,
                 }),
             initialPageParam: 0,
             getNextPageParam: (lastPage) => lastPage.nextCursor,

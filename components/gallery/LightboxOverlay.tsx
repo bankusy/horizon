@@ -152,7 +152,14 @@ export function LightboxOverlay({
                                     duration: 0.8,
                                     ease: [0.22, 1, 0.36, 1],
                                 }}
-                                className="relative w-full h-full flex items-center justify-center font-inter"
+                                className="relative w-full h-full flex items-center justify-center font-inter select-none"
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                                dragElastic={0.2}
+                                onDragEnd={(_, info) => {
+                                    if (info.offset.x < -50) nextLightbox();
+                                    else if (info.offset.x > 50) prevLightbox();
+                                }}
                             >
                                 <div className="relative w-full h-full flex items-center justify-center py-20 px-4 md:py-24 md:px-12 pointer-events-none">
                                     <div className="relative w-full h-full pointer-events-auto flex items-center justify-center">
@@ -199,9 +206,12 @@ export function LightboxOverlay({
                                             <div className="relative w-full h-full">
                                                 <Image
                                                     fill
-                                                    className="object-contain transition-transform duration-300 ease-out"
+                                                    className="object-contain transition-transform duration-300 ease-out select-none"
+                                                    draggable={false}
+                                                    onDragStart={(e: React.DragEvent) => e.preventDefault()}
                                                     style={{
                                                         transform: `scale(${zoomLevel})`,
+                                                        pointerEvents: "none",
                                                     }}
                                                     src={
                                                         lightboxIndex !== null

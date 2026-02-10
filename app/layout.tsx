@@ -4,7 +4,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next"
-import KakaoButton from "@/components/KakaoButton";
+import MobileActionBar from "@/components/MobileActionBar";
 
 const instrumentSans = localFont({
   src: "../public/fonts/InstrumentSans-VariableFont.ttf",
@@ -29,7 +29,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <Toaster position="top-center" richColors />
-          <KakaoButton />
+          <MobileActionBar />
         </Providers>
       </body>
     </html>

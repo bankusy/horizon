@@ -45,14 +45,14 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
 
     if (bannerItems.length === 0) {
         return (
-            <section className="relative h-[60vh] md:h-[85vh] w-full flex items-center justify-center bg-zinc-950/20">
+            <section className="relative aspect-21/9 w-full flex items-center justify-center bg-zinc-950/20">
                 <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
             </section>
         );
     }
 
     return (
-        <section className="relative h-[60vh] md:h-[85vh] w-full overflow-hidden group bg-muted/20">
+        <section className="relative aspect-21/9 w-full overflow-hidden group bg-muted/20">
             {!assetsLoaded && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-background">
                     <div className="flex flex-col items-center gap-4">
@@ -98,18 +98,18 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
                 </motion.div>
             </AnimatePresence>
 
-            <div className="absolute inset-0 hidden lg:flex items-center justify-between px-16 z-30 opacity-0 group-hover:opacity-100 transition-all duration-700">
+            <div className="absolute inset-0 flex items-center justify-between px-4 md:px-16 z-30 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-700">
                 <button
                     onClick={prevSlide}
-                    className="p-4 rounded-full bg-white/5 backdrop-blur-3xl border border-white/10 text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all duration-500"
+                    className="p-2 md:p-4 rounded-full bg-white/5 backdrop-blur-3xl border border-white/10 text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all duration-500"
                 >
-                    <ChevronLeft size={24} />
+                    <ChevronLeft className="w-4 h-4 md:w-6 md:h-6" />
                 </button>
                 <button
                     onClick={nextSlide}
-                    className="p-4 rounded-full bg-white/5 backdrop-blur-3xl border border-white/10 text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all duration-500"
+                    className="p-2 md:p-4 rounded-full bg-white/5 backdrop-blur-3xl border border-white/10 text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all duration-500"
                 >
-                    <ChevronRight size={24} />
+                    <ChevronRight className="w-4 h-4 md:w-6 md:h-6" />
                 </button>
             </div>
 

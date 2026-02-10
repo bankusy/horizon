@@ -34,3 +34,6 @@ CREATE POLICY "Allow public read for site_settings"
 -- 수정은 인증된 사용자만 (테스트용으로 모두 허용)
 CREATE POLICY "Allow all for site_settings" 
   ON site_settings FOR ALL USING (true);
+
+-- 5. categories 테이블에 show_in_all 컬럼 추가 (All 탭 포함 여부)
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS show_in_all boolean DEFAULT true;

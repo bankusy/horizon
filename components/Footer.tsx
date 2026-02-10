@@ -55,7 +55,7 @@ function FooterRow({ label, value, isLink, href }: FooterRowProps) {
 
 export function Footer() {
   return (
-    <footer className="w-full bg-background border-t border-border/50 py-16 md:py-24 pb-32">
+    <footer className="w-full bg-background border-t border-border/50 py-16 md:py-24 pb-28 md:pb-24">
       <div className="w-full px-6 md:px-12 lg:px-20 mx-auto max-w-[1920px]">
         {/* Main Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 md:gap-24 lg:gap-32 items-start">
