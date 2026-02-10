@@ -52,7 +52,7 @@ export function Navigation() {
                 <div className="flex items-center">
                     <Link
                         href="/contact"
-                        className={`text-[10px] md:text-sm font-bold transition-base px-6 py-2 ${
+                        className={`text-lg md:text-xl font-bold transition-base px-6 py-2 ${
                             pathname === "/contact" 
                                 ? "text-brand" 
                                 : "text-muted-foreground hover:text-brand"

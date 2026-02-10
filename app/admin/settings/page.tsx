@@ -22,6 +22,7 @@ export default function AdminSettingsPage() {
     desktop: 4,
     wide: 5,
   });
+  const [borderRadius, setBorderRadius] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -35,9 +36,19 @@ export default function AdminSettingsPage() {
           .select("value")
           .eq("key", "gallery_columns")
           .single();
+
+        const { data: radiusData, error: radiusError } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "gallery_image_radius")
+          .single();
         
         if (!error && data) {
           setColumns(data.value as GalleryColumnSettings);
+        }
+
+        if (!radiusError && radiusData) {
+            setBorderRadius(Number(radiusData.value) || 0);
         }
       } catch (e) {
         console.error("Settings load failed:", e);
@@ -60,8 +71,16 @@ export default function AdminSettingsPage() {
           value: columns,
           updated_at: new Date().toISOString()
         });
+
+      const { error: radiusError } = await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "gallery_image_radius", 
+          value: borderRadius,
+          updated_at: new Date().toISOString()
+        });
       
-      if (error) throw error;
+      if (error || radiusError) throw error || radiusError;
       toast.success("설정이 저장되었습니다.");
     } catch (e) {
       console.error("Settings save failed:", e);
@@ -177,6 +196,60 @@ export default function AdminSettingsPage() {
                 </div>
               </>
             )}
+          </CardContent>
+        </Card>
+
+        {/* 이미지 스타일 설정 */}
+        <Card className="rounded-none border-border bg-card overflow-hidden">
+          <CardHeader className="p-8 border-b border-border bg-secondary/20">
+            <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3 text-foreground">
+              <Settings size={24} className="text-primary" />
+              이미지 스타일 설정
+            </CardTitle>
+            <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-1">
+              갤러리 이미지의 시각적 스타일을 조정합니다.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+                  이미지 라운드 (px)
+                </label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={borderRadius}
+                    onChange={(e) => setBorderRadius(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="h-10 rounded-lg"
+                  />
+                  <div 
+                    className="h-10 w-10 bg-primary transition-all duration-300 border border-border"
+                    style={{ borderRadius: `${borderRadius}px` }}
+                    title="미리보기"
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  0으로 설정하면 직각 모서리가 됩니다.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end pt-8 mt-8 border-t border-border">
+                <Button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="rounded-none px-10 h-12 font-black uppercase tracking-widest text-[11px] transition-all duration-500"
+                >
+                {isSaving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Save className="mr-2 h-4 w-4 stroke-3" />
+                )}
+                스타일 저장
+                </Button>
+            </div>
           </CardContent>
         </Card>
 

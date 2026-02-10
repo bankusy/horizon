@@ -156,6 +156,7 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
         desktop: 4,
         wide: 5,
     });
+    const [imageRadius, setImageRadius] = useState(0);
 
     // 그리드 설정 로드
     useEffect(() => {
@@ -167,12 +168,22 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                     .select("value")
                     .eq("key", "gallery_columns")
                     .single();
+
+                const { data: radiusData } = await supabase
+                    .from("site_settings")
+                    .select("value")
+                    .eq("key", "gallery_image_radius")
+                    .single();
                 
                 if (data?.value) {
                     setColumnSettings(data.value);
                 }
+
+                if (radiusData?.value) {
+                    setImageRadius(Number(radiusData.value) || 0);
+                }
             } catch (e) {
-                console.error("Column settings load failed:", e);
+                console.error("Settings load failed:", e);
             }
         }
         loadColumnSettings();
@@ -198,15 +209,8 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
         const heights = new Array(columnCount).fill(0);
 
         displayImages.forEach((img, idx) => {
-            let shortestIndex = 0;
-            for (let i = 1; i < columnCount; i++) {
-                if (heights[i] < heights[shortestIndex]) {
-                    shortestIndex = i;
-                }
-            }
-            
-            cols[shortestIndex].push({ ...img, globalIdx: idx });
-            heights[shortestIndex] += 1 / (img.aspect_ratio || 1);
+            const columnIndex = idx % columnCount;
+            cols[columnIndex].push({ ...img, globalIdx: idx });
         });
 
         return cols;
@@ -290,9 +294,9 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
         <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 py-24 flex flex-col gap-24">
             <section>
                 <div className="flex flex-col xl:flex-row xl:items-end justify-between mb-12 md:mb-20 gap-8">
-                    <div className="border-l-8 border-foreground pl-6 md:pl-10">
+                    <div className="border-l-8 border-brand pl-6 md:pl-10">
                         <h2 className="text-5xl md:text-8xl font-light tracking-tighter mb-4 uppercase leading-none">
-                            Archive
+                            {selectedCategoryId === "All" ? "Archive" : categoriesMap[selectedCategoryId] || "Archive"}
                         </h2>
                         <p className="text-xs md:text-sm font-bold tracking-[0.3em] text-muted-foreground uppercase opacity-50">
                             Precision • Aesthetics • Innovation
@@ -307,9 +311,9 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                             key="All"
                             onClick={() => setSelectedCategoryId("All")}
                             className={`px-4 md:px-6 py-2 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full transition-all duration-700 flex items-center gap-2 whitespace-nowrap shrink-0 ${
-                                selectedCategoryId === "All"
-                                    ? "bg-foreground text-background shadow-2xl shadow-foreground/20"
-                                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    selectedCategoryId === "All"
+                                        ? "bg-brand text-foreground shadow-2xl shadow-brand/20"
+                                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                             }`}
                         >
                             All
@@ -320,7 +324,7 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                 onClick={() => setSelectedCategoryId(cat.id)}
                                 className={`px-4 md:px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-500 whitespace-nowrap ${
                                     selectedCategoryId === cat.id
-                                        ? "bg-foreground text-background shadow-2xl shadow-foreground/20"
+                                        ? "bg-brand text-foreground shadow-2xl shadow-brand/20"
                                         : "bg-muted/50 text-muted-foreground hover:bg-muted"
                                 }`}
                             >
@@ -340,13 +344,13 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                     >
                         {displayImages.length > 0 ? (
                             <div 
-                                className="grid gap-4 md:gap-10"
+                                className="grid gap-2 md:gap-3"
                                 style={{ 
                                     gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` 
                                 }}
                             >
                                 {groupedColumns.map((col, colIdx) => (
-                                    <div key={colIdx} className="flex flex-col gap-4 md:gap-10">
+                                    <div key={colIdx} className="flex flex-col gap-2 md:gap-3">
                                         {col.map((img) => {
                                             const globalIdx = img.globalIdx;
                                             return (
@@ -368,6 +372,7 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                         setIsAutoPlaying(false);
                                                     }}
                                                     className="group relative w-full overflow-hidden bg-zinc-100 transition-all duration-500 md:hover:shadow-xl md:hover:shadow-black/10 cursor-zoom-in"
+                                                    style={{ borderRadius: `${imageRadius}px` }}
                                                 >
                                                     {(img.type === 'video' || img.video_url) ? (
                                                         <div 
@@ -405,10 +410,10 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                         />
                                                     )}
 
-                                                    <div className="absolute inset-x-0 bottom-0 p-2 opacity-100 md:inset-0 md:bg-white/40 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 flex md:items-center justify-end md:justify-center pointer-events-none">
-                                                        <div className="bg-black/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none px-2 py-1 rounded md:rounded-none">
-                                                            <h3 className="text-[10px] md:text-sm font-bold tracking-widest md:tracking-[0.2em] opacity-90 uppercase text-white md:text-black">
-                                                                {img.width && img.height ? `${img.width}x${img.height}` : ''}
+                                                    <div className="absolute inset-x-0 bottom-0 p-2 opacity-100 md:inset-0 md:bg-white/40 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 flex items-end justify-end pointer-events-none md:p-2">
+                                                        <div className="bg-black/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none px-2 py-1 md:px-0 md:py-0 rounded md:rounded-none">
+                                                            <h3 className="text-[10px] md:text-sm font-bold tracking-widest md:tracking-[0.2em] opacity-90 uppercase text-white md:text-black underline decoration-1 underline-offset-4">
+                                                                {img.width && img.height ? `${img.width}*${img.height}(PX)` : ''}
                                                             </h3>
                                                         </div>
                                                     </div>
