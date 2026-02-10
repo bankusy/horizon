@@ -375,25 +375,24 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                     style={{ borderRadius: `${imageRadius}px` }}
                                                 >
                                                     {(img.type === 'video' || img.video_url) ? (
-                                                        <div 
-                                                            className="relative w-full overflow-hidden bg-black"
-                                                            style={{ 
-                                                                aspectRatio: img.aspect_ratio ? `${img.aspect_ratio}` : '16/9'
-                                                            }}
-                                                        >
-                                                            <div className="absolute inset-0 z-0 pointer-events-none">
-                                                                <iframe
-                                                                    width="100%"
-                                                                    height="100%"
-                                                                    src={`https://www.youtube.com/embed/${getYoutubeId(img.video_url!)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYoutubeId(img.video_url!)}&playsinline=1&enablejsapi=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
-                                                                    title="YouTube grid player"
-                                                                    frameBorder="0"
-                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                                    className="w-full h-full scale-150 pointer-events-none"
-                                                                />
+                                                        <div className="relative w-full h-full group-hover:scale-110 group-hover:brightness-110 transition-all duration-700 ease-out">
+                                                            <Image
+                                                                width={800}
+                                                                height={800 / (img.aspect_ratio || 1)}
+                                                                className="w-full h-auto block"
+                                                                style={{ 
+                                                                    aspectRatio: img.aspect_ratio ? `${img.aspect_ratio}` : 'auto'
+                                                                }}
+                                                                src={img.src}
+                                                                alt={img.alt}
+                                                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
+                                                                priority={globalIdx < 6}
+                                                            />
+                                                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 text-white shadow-lg">
+                                                                    <Play size={20} fill="currentColor" className="ml-1" />
+                                                                </div>
                                                             </div>
-                                                            {/* Transparent Overlay to block interaction on grid */}
-                                                            <div className="absolute inset-0 z-10 bg-transparent" />
                                                         </div>
                                                     ) : (
                                                         <Image
