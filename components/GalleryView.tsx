@@ -385,7 +385,7 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                                 <iframe
                                                                     width="100%"
                                                                     height="100%"
-                                                                    src={`https://www.youtube.com/embed/${getYoutubeId(img.video_url!)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYoutubeId(img.video_url!)}&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&vq=hd1080&playsinline=1`}
+                                                                    src={`https://www.youtube.com/embed/${getYoutubeId(img.video_url!)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYoutubeId(img.video_url!)}&playsinline=1&enablejsapi=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
                                                                     title="YouTube grid player"
                                                                     frameBorder="0"
                                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
