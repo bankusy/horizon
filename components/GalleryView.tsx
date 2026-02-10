@@ -405,9 +405,9 @@ export function GalleryView({ initialImages, nextCursor }: GalleryViewProps) {
                                                         />
                                                     )}
 
-                                                    <div className="absolute inset-0 bg-white/40 opacity-0 md:group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
-                                                        <div className="text-black text-center">
-                                                            <h3 className="text-xs md:text-sm font-bold tracking-[0.2em] opacity-90 uppercase text-black">
+                                                    <div className="absolute inset-x-0 bottom-0 p-2 opacity-100 md:inset-0 md:bg-white/40 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 flex md:items-center justify-end md:justify-center pointer-events-none">
+                                                        <div className="bg-black/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none px-2 py-1 rounded md:rounded-none">
+                                                            <h3 className="text-[10px] md:text-sm font-bold tracking-widest md:tracking-[0.2em] opacity-90 uppercase text-white md:text-black">
                                                                 {img.width && img.height ? `${img.width}x${img.height}` : ''}
                                                             </h3>
                                                         </div>
