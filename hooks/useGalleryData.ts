@@ -15,7 +15,7 @@ export const getYoutubeId = (url: string) => {
 
 // Real Supabase Data Fetching
 const fetchGalleryPage = async ({
-    pageParam = 0,
+    pageParam = 0, // This is now the offset (from index)
     categoryId = "All",
     categoriesMap = {} as Record<string, string>,
     allowedCategoryIds = null as string[] | null,
@@ -23,7 +23,7 @@ const fetchGalleryPage = async ({
 }): Promise<{ images: GalleryImage[]; nextCursor: number | null; totalCount: number }> => {
     if (!supabase) return { images: [], nextCursor: null, totalCount: 0 };
 
-    const from = pageParam * itemsPerPage;
+    const from = pageParam;
     const to = from + itemsPerPage - 1;
 
     let query = supabase
@@ -64,11 +64,11 @@ const fetchGalleryPage = async ({
             };
         }) || [];
 
-    const hasNext = count ? from + itemsPerPage < count : false;
+    const hasNext = count ? from + images.length < count : false;
 
     return {
         images,
-        nextCursor: hasNext ? pageParam + 1 : null,
+        nextCursor: hasNext ? from + images.length : null,
         totalCount: count || 0,
     };
 };

@@ -40,8 +40,20 @@ export default function AdminSettingsPage() {
   const [borderRadius, setBorderRadius] = useState<string | number>(0);
   const [borderWidth, setBorderWidth] = useState<string | number>(0);
   const [borderColor, setBorderColor] = useState<string>("#ffffff");
+  const [bgLight, setBgLight] = useState<string>("#ffffff");
+  const [bgDark, setBgDark] = useState<string>("#09090b");
+  const [heroHeading, setHeroHeading] = useState<string>("WE VISUALIZE THE UNBUILT");
+  const [heroSubheader, setHeroSubheader] = useState<string>("CAPTURING ALL THE ESSENCE");
+  const [heroDescription, setHeroDescription] = useState<string>("ARCHITECTURAL VISUALIZATION STUDIO");
+  const [heroHeadingColor, setHeroHeadingColor] = useState<string>("");
+  const [heroSubheaderColor, setHeroSubheaderColor] = useState<string>("");
+  const [heroDescriptionColor, setHeroDescriptionColor] = useState<string>("");
+  const [heroHeadingSize, setHeroHeadingSize] = useState<string | number>("");
+  const [heroSubheaderSize, setHeroSubheaderSize] = useState<string | number>("");
+  const [heroDescriptionSize, setHeroDescriptionSize] = useState<string | number>("");
   const [isShuffled, setIsShuffled] = useState<boolean>(false);
   const [itemsPerPage, setItemsPerPage] = useState<string | number>(50);
+  const [initialItems, setInitialItems] = useState<string | number>(50);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -90,6 +102,47 @@ export default function AdminSettingsPage() {
           setBorderColor(String(borderColorData.value));
         }
 
+        const { data: bgLightData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "gallery_bg_light")
+          .single();
+        
+        if (bgLightData) {
+          setBgLight(String(bgLightData.value));
+        }
+
+        const { data: bgDarkData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "gallery_bg_dark")
+          .single();
+        
+        if (bgDarkData) {
+          setBgDark(String(bgDarkData.value));
+        }
+
+        const { data: heroData } = await supabase
+          .from("site_settings")
+          .select("key, value")
+          .like("key", "hero_%");
+
+        if (heroData) {
+          heroData.forEach((item: { key: string; value: any }) => {
+            switch (item.key) {
+              case "hero_heading": setHeroHeading(String(item.value)); break;
+              case "hero_subheader": setHeroSubheader(String(item.value)); break;
+              case "hero_description": setHeroDescription(String(item.value)); break;
+              case "hero_heading_color": setHeroHeadingColor(String(item.value)); break;
+              case "hero_subheader_color": setHeroSubheaderColor(String(item.value)); break;
+              case "hero_description_color": setHeroDescriptionColor(String(item.value)); break;
+              case "hero_heading_size": setHeroHeadingSize(item.value); break;
+              case "hero_subheader_size": setHeroSubheaderSize(item.value); break;
+              case "hero_description_size": setHeroDescriptionSize(item.value); break;
+            }
+          });
+        }
+
         const { data: shuffleData } = await supabase
           .from("site_settings")
           .select("value")
@@ -108,6 +161,16 @@ export default function AdminSettingsPage() {
 
         if (pagingData?.value !== undefined) {
           setItemsPerPage(Number(pagingData.value) || 50);
+        }
+
+        const { data: initialDataReq } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "gallery_initial_items")
+          .single();
+
+        if (initialDataReq?.value !== undefined) {
+          setInitialItems(Number(initialDataReq.value) || 50);
         }
 
         const { data: vrColumnData } = await supabase
@@ -178,6 +241,40 @@ export default function AdminSettingsPage() {
           value: borderColor || "#ffffff",
           updated_at: new Date().toISOString()
         });
+
+      await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "gallery_bg_light", 
+          value: bgLight || "#ffffff",
+          updated_at: new Date().toISOString()
+        });
+
+      await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "gallery_bg_dark", 
+          value: bgDark || "#09090b",
+          updated_at: new Date().toISOString()
+        });
+
+      const heroSettings = [
+        { key: "hero_heading", value: heroHeading },
+        { key: "hero_subheader", value: heroSubheader },
+        { key: "hero_description", value: heroDescription },
+        { key: "hero_heading_color", value: heroHeadingColor },
+        { key: "hero_subheader_color", value: heroSubheaderColor },
+        { key: "hero_description_color", value: heroDescriptionColor },
+        { key: "hero_heading_size", value: heroHeadingSize },
+        { key: "hero_subheader_size", value: heroSubheaderSize },
+        { key: "hero_description_size", value: heroDescriptionSize },
+      ];
+
+      for (const setting of heroSettings) {
+        await supabase
+          .from("site_settings")
+          .upsert({ ...setting, updated_at: new Date().toISOString() });
+      }
       
       if (error || radiusError) throw error || radiusError;
 
@@ -205,13 +302,24 @@ export default function AdminSettingsPage() {
           updated_at: new Date().toISOString()
         });
       
+      await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "gallery_initial_items", 
+          value: Math.max(1, parseInt(String(initialItems)) || 50),
+          updated_at: new Date().toISOString()
+        });
+      
       // Update local state with validated values
       setColumns(validatedColumns);
       setVrColumns(validatedVrColumns);
       setBorderRadius(Math.max(0, Math.min(100, parseInt(String(borderRadius)) || 0)));
       setBorderWidth(Math.max(0, Math.min(20, parseInt(String(borderWidth)) || 0)));
       setBorderColor(borderColor || "#ffffff");
+      setBgLight(bgLight || "#ffffff");
+      setBgDark(bgDark || "#09090b");
       setItemsPerPage(Math.max(1, parseInt(String(itemsPerPage)) || 50));
+      setInitialItems(Math.max(1, parseInt(String(initialItems)) || 50));
 
       toast.success("설정이 저장되었습니다.");
     } catch (e) {
@@ -476,6 +584,25 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
+
+            <div className="flex items-center justify-between pt-6 border-t border-border/50 mt-6">
+              <div className="space-y-1">
+                <p className="text-sm font-bold">초기 로딩 이미지 개수</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                  페이지 첫 접속 시 불러올 이미지 개수를 설정합니다.
+                </p>
+              </div>
+              <div className="w-32">
+                <Input
+                  value={initialItems}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setInitialItems(val);
+                  }}
+                  className="h-10 rounded-lg text-right font-mono"
+                />
+              </div>
+            </div>
             
             <div className="flex justify-end pt-8 mt-8 border-t border-border">
               <Button 
@@ -596,6 +723,187 @@ export default function AdminSettingsPage() {
                     <Save className="mr-2 h-4 w-4 stroke-3" />
                 )}
                 스타일 저장
+                </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 히어로 헤더 설정 */}
+        <Card className="rounded-none border-border bg-card overflow-hidden">
+          <CardHeader className="p-8 border-b border-border bg-secondary/20">
+            <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3 text-foreground">
+              <Settings size={24} className="text-primary" />
+              히어로 헤더 설정
+            </CardTitle>
+            <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-1">
+              메인 페이지 최상단 히어로 섹션의 문구와 스타일을 관리합니다.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 space-y-12">
+            {/* Heading */}
+            <div className="space-y-6">
+              <div className="pb-2 border-b border-border/50">
+                <h3 className="text-sm font-black uppercase tracking-widest text-primary">메인 타이틀 (Heading)</h3>
+              </div>
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">내용</label>
+                  <Input value={heroHeading} onChange={(e) => setHeroHeading(e.target.value)} className="h-12 rounded-none font-medium" placeholder="WE VISUALIZE THE UNBUILT" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 크기 (PX/VW)</label>
+                  <Input value={heroHeadingSize} onChange={(e) => setHeroHeadingSize(e.target.value)} className="h-12 rounded-none font-mono" placeholder="기본값 (배율)" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 색상</label>
+                  <div className="flex gap-2">
+                    <Input value={heroHeadingColor} onChange={(e) => setHeroHeadingColor(e.target.value)} className="h-12 rounded-none font-mono uppercase" placeholder="#FFFFFF (기본)" />
+                    <Input type="color" value={heroHeadingColor || "#ffffff"} onChange={(e) => setHeroHeadingColor(e.target.value)} className="w-12 h-12 p-0 border-none bg-transparent cursor-pointer" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Subheader */}
+            <div className="space-y-6">
+              <div className="pb-2 border-b border-border/50">
+                <h3 className="text-sm font-black uppercase tracking-widest text-primary">상단 보조 문구 (Subheader)</h3>
+              </div>
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">내용</label>
+                  <Input value={heroSubheader} onChange={(e) => setHeroSubheader(e.target.value)} className="h-12 rounded-none font-medium" placeholder="CAPTURING ALL THE ESSENCE" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 크기 (PX/VW)</label>
+                  <Input value={heroSubheaderSize} onChange={(e) => setHeroSubheaderSize(e.target.value)} className="h-12 rounded-none font-mono" placeholder="기본값" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 색상</label>
+                  <div className="flex gap-2">
+                    <Input value={heroSubheaderColor} onChange={(e) => setHeroSubheaderColor(e.target.value)} className="h-12 rounded-none font-mono uppercase" placeholder="#FFFFFF (기본)" />
+                    <Input type="color" value={heroSubheaderColor || "#ffffff"} onChange={(e) => setHeroSubheaderColor(e.target.value)} className="w-12 h-12 p-0 border-none bg-transparent cursor-pointer" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-6">
+              <div className="pb-2 border-b border-border/50">
+                <h3 className="text-sm font-black uppercase tracking-widest text-primary">하단 설명 문구 (Description)</h3>
+              </div>
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">내용</label>
+                  <Input value={heroDescription} onChange={(e) => setHeroDescription(e.target.value)} className="h-12 rounded-none font-medium" placeholder="ARCHITECTURAL VISUALIZATION STUDIO" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 크기 (PX/VW)</label>
+                  <Input value={heroDescriptionSize} onChange={(e) => setHeroDescriptionSize(e.target.value)} className="h-12 rounded-none font-mono" placeholder="기본값" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 색상</label>
+                  <div className="flex gap-2">
+                    <Input value={heroDescriptionColor} onChange={(e) => setHeroDescriptionColor(e.target.value)} className="h-12 rounded-none font-mono uppercase" placeholder="기본값" />
+                    <Input type="color" value={heroDescriptionColor || "#ffffff"} onChange={(e) => setHeroDescriptionColor(e.target.value)} className="w-12 h-12 p-0 border-none bg-transparent cursor-pointer" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-8 border-t border-border">
+              <Button onClick={handleSave} disabled={isSaving} className="rounded-none px-10 h-12 font-black uppercase tracking-widest text-[11px] transition-all duration-500">
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4 stroke-3" />}
+                히어로 설정 저장
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 전체 테마 설정 */}
+        <Card className="rounded-none border-border bg-card overflow-hidden">
+          <CardHeader className="p-8 border-b border-border bg-secondary/20">
+            <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3 text-foreground">
+              <Settings size={24} className="text-primary" />
+              전체 테마 설정
+            </CardTitle>
+            <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-1">
+              사이트의 전체 배경색 및 테마 스타일을 설정합니다.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4 px-4 py-6 bg-secondary/10 border border-border/50">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-foreground uppercase tracking-widest">
+                    라이트 모드 배경색
+                  </label>
+                  <span className="text-[10px] font-mono opacity-50 uppercase">{bgLight}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <Input
+                      value={bgLight}
+                      onChange={(e) => setBgLight(e.target.value)}
+                      className="h-10 rounded-none bg-background border-border/50 pl-10 font-mono text-sm uppercase"
+                      placeholder="#FFFFFF"
+                    />
+                    <div 
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border border-border"
+                      style={{ backgroundColor: bgLight }}
+                    />
+                  </div>
+                  <Input 
+                    type="color"
+                    value={bgLight}
+                    onChange={(e) => setBgLight(e.target.value)}
+                    className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer overflow-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 px-4 py-6 bg-secondary/10 border border-border/50">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-foreground uppercase tracking-widest">
+                    다크 모드 배경색
+                  </label>
+                  <span className="text-[10px] font-mono opacity-50 uppercase">{bgDark}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <Input
+                      value={bgDark}
+                      onChange={(e) => setBgDark(e.target.value)}
+                      className="h-10 rounded-none bg-background border-border/50 pl-10 font-mono text-sm uppercase"
+                      placeholder="#09090B"
+                    />
+                    <div 
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border border-border"
+                      style={{ backgroundColor: bgDark }}
+                    />
+                  </div>
+                  <Input 
+                    type="color"
+                    value={bgDark}
+                    onChange={(e) => setBgDark(e.target.value)}
+                    className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer overflow-hidden"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end pt-8 mt-8 border-t border-border">
+                <Button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="rounded-none px-10 h-12 font-black uppercase tracking-widest text-[11px] transition-all duration-500"
+                >
+                {isSaving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Save className="mr-2 h-4 w-4 stroke-3" />
+                )}
+                테마 저장
                 </Button>
             </div>
           </CardContent>

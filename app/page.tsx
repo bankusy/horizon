@@ -9,7 +9,7 @@ import { Footer } from "@/components/Footer";
 async function getInitialData() {
     if (!supabase) return { banners: [], initialImages: [], nextCursor: null };
 
-    // 0. 페이징 설정 조회 (기본값 50)
+    // 0. 페이징 설정 조회
     const { data: pagingData } = await supabase
         .from("site_settings")
         .select("value")
@@ -17,6 +17,14 @@ async function getInitialData() {
         .single();
     
     const itemsPerPage = Number(pagingData?.value) || 50;
+
+    const { data: initialPagingData } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "gallery_initial_items")
+        .single();
+    
+    const initialItemsCount = Number(initialPagingData?.value) || 50;
 
     // 1. 배너 데이터 페칭
     const { data: bannerData } = await supabase
@@ -31,7 +39,7 @@ async function getInitialData() {
         .select("*", { count: "exact" })
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false })
-        .range(0, itemsPerPage - 1);
+        .range(0, initialItemsCount - 1);
 
     const initialImages = imageData?.map((item: any) => ({
         id: item.id,
@@ -43,13 +51,27 @@ async function getInitialData() {
         aspect_ratio: item.aspect_ratio || 1,
     })) || [];
 
-    const hasNext = count ? itemsPerPage < count : false;
+    const hasNext = count ? initialItemsCount < count : false;
+
+    // 3. 히어로 데이터 페칭
+    const { data: heroData } = await supabase
+        .from("site_settings")
+        .select("key, value")
+        .like("key", "hero_%");
+    
+    const heroSettings: any = {};
+    if (heroData) {
+        heroData.forEach((item: { key: string; value: any }) => {
+            heroSettings[item.key] = item.value;
+        });
+    }
 
     return {
         banners: bannerData || [],
         initialImages,
-        nextCursor: hasNext ? 1 : null,
+        nextCursor: hasNext ? initialImages.length : null,
         itemsPerPage,
+        heroSettings,
     };
 }
 

@@ -52,7 +52,7 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
     }
 
     return (
-        <section className="relative aspect-video w-full overflow-hidden group bg-muted/20">
+        <section className="relative aspect-21/9 w-full overflow-hidden group bg-muted/20">
             {!assetsLoaded && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-background">
                     <div className="flex flex-col items-center gap-4">

@@ -88,14 +88,6 @@ export function Footer() {
               <FooterRow label="Email" value="cghrn@naver.com" isLink href="mailto:cghrn@naver.com" />
             </div>
           </FooterSection>
-
-          {/* Section 3: Business */}
-          <FooterSection title="Business">
-            <div className="flex flex-col gap-3">
-              <FooterRow label="Country" value="Republic of Korea" />
-              <FooterRow label="License" value="000-00-00000" />
-            </div>
-          </FooterSection>
         </div>
 
         {/* Bottom Bar */}

@@ -53,7 +53,7 @@ export function Navigation() {
         <nav
             className={`fixed top-0 left-0 w-full z-2000 transition-all duration-700 flex items-center ${
                 isScrolled
-                    ? "bg-background/80 backdrop-blur-xl border-b border-border/50 h-16 md:h-20"
+                    ? "bg-background/40 backdrop-blur-xl border-b border-border/50 h-16 md:h-20"
                     : "bg-transparent h-24 md:h-32"
             }`}
         >
