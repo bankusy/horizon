@@ -55,7 +55,7 @@ export function HeroHeader({ settings }: HeroHeaderProps) {
         <div className="block w-full px-4 min-[400px]:px-8 md:px-12 lg:px-20 mx-auto border-b border-border/50 pb-12 pt-16 md:pb-20 md:py-32">
             <div className="flex flex-col items-center justify-center relative gap-8 md:gap-12">
                 <div className="flex flex-col items-center justify-center">
-                    <motion.span
+                    {/* <motion.span
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 0.4, y: 0 }}
                         transition={{ delay: 200, duration: 1 }}
@@ -72,7 +72,7 @@ export function HeroHeader({ settings }: HeroHeaderProps) {
                         }}
                     >
                         {subheader}
-                    </motion.span>
+                    </motion.span> */}
                     <div className="flex items-center justify-center gap-4 md:gap-12 w-full">
                         <div className="w-1 h-1 bg-brand/30 rotate-45 hidden md:block shrink-0" />
                         <BlurText
