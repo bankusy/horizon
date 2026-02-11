@@ -19,6 +19,12 @@ interface HeroHeaderProps {
     };
 }
 
+const formatSize = (size: string | number | undefined, fallback: string) => {
+    if (!size || size === "") return fallback;
+    if (/^\d+(\.\d+)?$/.test(String(size))) return `${size}px`;
+    return String(size);
+};
+
 export function HeroHeader({ settings }: HeroHeaderProps) {
     const [assetsLoaded, setAssetsLoaded] = useState(false);
 
@@ -32,41 +38,41 @@ export function HeroHeader({ settings }: HeroHeaderProps) {
 
     return (
         <div className="block w-full px-4 min-[400px]:px-8 md:px-12 lg:px-20 mx-auto border-b border-border/50 pb-12 pt-16 md:pb-20 md:py-32">
-            <div className="flex flex-col items-center justify-center relative gap-10 md:gap-14">
+            <div className="flex flex-col items-center justify-center relative gap-8 md:gap-12">
                 <div className="flex flex-col items-center justify-center">
                     <motion.span
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 0.4, y: 0 }}
                         transition={{ delay: 200, duration: 1 }}
-                        className="font-bold tracking-[0.6em] md:tracking-[1em] uppercase mb-4 md:mb-8 text-center"
+                        className="font-bold tracking-[0.4em] min-[400px]:tracking-[0.6em] md:tracking-[1em] uppercase mb-3 md:mb-6 text-center whitespace-nowrap"
                         style={{ 
                             color: settings?.hero_subheader_color || "inherit",
-                            fontSize: settings?.hero_subheader_size || "clamp(9px, 0.8vw, 11px)"
+                            fontSize: formatSize(settings?.hero_subheader_size, "clamp(7px, 1.5vw, 12px)")
                         }}
                     >
                         {subheader}
                     </motion.span>
-                    <div className="flex items-center justify-center gap-6 md:gap-12">
-                        <div className="w-1 h-1 bg-brand/40 rotate-45 hidden md:block shrink-0" />
+                    <div className="flex items-center justify-center gap-4 md:gap-12 w-full">
+                        <div className="w-1 h-1 bg-brand/30 rotate-45 hidden md:block shrink-0" />
                         <BlurText
                             text={heading}
                             delay={400}
                             animateBy="words"
                             direction="top"
-                            className="font-light tracking-tighter leading-[0.9] text-center"
+                            className="font-light tracking-tighter leading-[0.9] text-center whitespace-nowrap"
                             style={{ 
                                 color: settings?.hero_heading_color || "inherit",
-                                fontSize: settings?.hero_heading_size || "clamp(32px, 6vw, 4.5rem)"
+                                fontSize: formatSize(settings?.hero_heading_size, "clamp(12px, 5vw, 5.5rem)")
                             }}
                         />
-                        <div className="w-1 h-1 bg-brand/40 rotate-45 hidden md:block shrink-0" />
+                        <div className="w-1 h-1 bg-brand/30 rotate-45 hidden md:block shrink-0" />
                     </div>
                 </div>
                 <p 
-                    className="tracking-[0.4em] md:tracking-[0.6em] lg:tracking-[0.8em] uppercase font-medium leading-none text-center opacity-40"
+                    className="tracking-[0.3em] min-[400px]:tracking-[0.5em] md:tracking-[0.8em] lg:tracking-[1em] uppercase font-medium leading-none text-center opacity-40 shrink-0 whitespace-nowrap"
                     style={{ 
                         color: settings?.hero_description_color || "inherit",
-                        fontSize: settings?.hero_description_size || "clamp(10px, 0.9vw, 13px)"
+                        fontSize: formatSize(settings?.hero_description_size, "clamp(8px, 1.2vw, 14px)")
                     }}
                 >
                     {description}

@@ -2,10 +2,17 @@
 
 import React from "react";
 import { Phone, MessageSquare, MessageCircle, Globe } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function MobileActionBar() {
+  const pathname = usePathname();
   const phoneNumber = "01035007742";
   const externalLink = "https://naver.com"; // Naver Blog placeholder
+
+  // 관리자 페이지에서는 하단 바를 숨김
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <>

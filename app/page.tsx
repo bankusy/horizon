@@ -75,15 +75,19 @@ async function getInitialData() {
     };
 }
 
+// 메인 페이지의 캐싱을 비활성화하여 실시간 데이터 반영 (대시보드 수정 즉시 반영)
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
-    const { banners, initialImages, nextCursor, itemsPerPage } = await getInitialData();
+    const { banners, initialImages, nextCursor, itemsPerPage, heroSettings } = await getInitialData();
 
     return (
         <div className="min-h-screen bg-background font-sans selection:bg-background selection:text-foreground overflow-x-hidden">
             <Navigation />
 
             <main className="pt-(--navbar-height)">
-                <HeroHeader />
+                <HeroHeader settings={heroSettings} />
 
                 <BannerCarousel initialBanners={banners} />
 
@@ -98,6 +102,3 @@ export default async function Home() {
         </div>
     );
 }
-
-// ISR 설정: 1시간마다 데이터 갱신 (선택 사항)
-export const revalidate = 3600;
