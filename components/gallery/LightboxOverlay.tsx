@@ -92,31 +92,16 @@ export function LightboxOverlay({
                                             <div className="relative w-full h-full pointer-events-auto flex items-center justify-center">
                                                 {displayImages[lightboxIndex!].video_url ? (
                                                     <div className="relative w-full h-full max-w-6xl aspect-video overflow-hidden shadow-2xl bg-black rounded-lg">
-                                                        <div className="block md:hidden w-full h-full">
-                                                            <iframe
-                                                                width="100%"
-                                                                height="100%"
-                                                                src={`https://www.youtube.com/embed/${getYoutubeId(displayImages[lightboxIndex!].video_url!)}?autoplay=1&controls=1&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&showinfo=0&mute=0&vq=hd1080&playsinline=1`}
-                                                                title="YouTube video player"
-                                                                frameBorder="0"
-                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                                allowFullScreen
-                                                                className="w-full h-full object-contain"
-                                                            />
-                                                        </div>
-                                                        <div className="hidden md:block w-full h-full relative">
-                                                            <iframe
-                                                                width="100%"
-                                                                height="100%"
-                                                                src={`https://www.youtube.com/embed/${getYoutubeId(displayImages[lightboxIndex!].video_url!)}?autoplay=1&controls=0&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&showinfo=0&mute=0&vq=hd1080&playsinline=1`}
-                                                                title="YouTube video player"
-                                                                frameBorder="0"
-                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                                allowFullScreen
-                                                                className="w-full h-full object-contain"
-                                                            />
-                                                            <div className="absolute inset-0 z-10 bg-transparent cursor-default" />
-                                                        </div>
+                                                        <iframe
+                                                            width="100%"
+                                                            height="100%"
+                                                            src={`https://www.youtube.com/embed/${getYoutubeId(displayImages[lightboxIndex!].video_url!)}?autoplay=1&controls=1&modestbranding=1&rel=0&disablekb=0&iv_load_policy=3&showinfo=0&mute=0&vq=hd1080&playsinline=1`}
+                                                            title="YouTube video player"
+                                                            frameBorder="0"
+                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                            allowFullScreen
+                                                            className="w-full h-full object-contain"
+                                                        />
                                                     </div>
                                                 ) : (
                                                     <div className="relative w-full h-full">

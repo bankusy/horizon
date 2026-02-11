@@ -7,12 +7,26 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Portal } from "@/components/ui/portal";
+import { supabase } from "@/lib/supabase";
 
 export function Navigation() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [scrollProgress, setScrollProgress] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
     const pathname = usePathname();
+
+    useEffect(() => {
+        async function fetchCategories() {
+            if (!supabase) return;
+            const { data } = await supabase
+                .from("categories")
+                .select("id, name")
+                .order("display_order", { ascending: true });
+            if (data) setCategories(data);
+        }
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -62,16 +76,15 @@ export function Navigation() {
 
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex items-center gap-8">
-                    
                     <Link
-                        href="/contact"
+                        href="/"
                         className={`text-lg md:text-xl font-bold transition-base px-6 py-2 ${
-                            pathname === "/contact" 
+                            pathname === "/" 
                                 ? "text-brand" 
                                 : "text-muted-foreground hover:text-brand"
                         }`}
                     >
-                        Contact
+                        Archive
                     </Link>
                     <Link
                         href="/vr"
@@ -82,6 +95,16 @@ export function Navigation() {
                         }`}
                     >
                         VR
+                    </Link>
+                    <Link
+                        href="/contact"
+                        className={`text-lg md:text-xl font-bold transition-base px-6 py-2 ${
+                            pathname === "/contact" 
+                                ? "text-brand" 
+                                : "text-muted-foreground hover:text-brand"
+                        }`}
+                    >
+                        Contact
                     </Link>
                 </div>
 
@@ -125,7 +148,7 @@ export function Navigation() {
                                 </button>
                             </div>
 
-                            <div className="flex flex-col gap-10">
+                            <div className="flex flex-col gap-8">
                                 <motion.div
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -138,8 +161,22 @@ export function Navigation() {
                                             pathname === "/" ? "text-brand" : "text-foreground"
                                         }`}
                                     >
-                                        Home
+                                        Archive
                                     </Link>
+                                    
+                                    {/* Category List under Archive for Mobile */}
+                                    <div className="flex flex-col gap-3 mt-6 ml-1 border-l border-border pl-6">
+                                        {categories.map((cat, idx) => (
+                                            <Link
+                                                key={cat.id}
+                                                href={`/?category=${cat.id}`}
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className="text-lg font-bold tracking-tight text-muted-foreground hover:text-brand transition-colors uppercase"
+                                            >
+                                                {cat.name}
+                                            </Link>
+                                        ))}
+                                    </div>
                                 </motion.div>
                                 
                                 <motion.div

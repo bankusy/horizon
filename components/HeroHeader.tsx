@@ -20,7 +20,7 @@ export function HeroHeader() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 0.4, y: 0 }}
                         transition={{ delay: 200, duration: 1 }}
-                        className="text-[8px] md:text-sm font-bold tracking-[0.8em] md:tracking-[1.5em] uppercase mb-3 md:mb-6 text-center"
+                        className="text-[1.8vw] min-[480px]:text-[1.2vw] md:text-sm font-bold tracking-[0.8em] min-[400px]:tracking-[1.2em] md:tracking-[1.5em] uppercase mb-3 md:mb-6 text-center whitespace-nowrap"
                     >
                         CAPTURING ALL THE ESSENCE
                     </motion.span>
@@ -31,12 +31,12 @@ export function HeroHeader() {
                             delay={400}
                             animateBy="words"
                             direction="top"
-                            className="text-2xl sm:text-3xl md:text-5xl lg:text-[6rem] font-light tracking-tighter leading-none text-center"
+                            className="text-[7.5vw] md:text-[8vw] lg:text-[6.5rem] font-light tracking-tighter leading-none text-center flex-nowrap"
                         />
                         <div className="w-1 h-1 bg-brand rotate-45 hidden md:block" />
                     </div>
                 </div>
-                <p className="text-[8px] sm:text-xs md:text-sm lg:text-base tracking-[0.3em] md:tracking-[0.8em] lg:tracking-[1.2em] text-muted-foreground/60 uppercase font-medium leading-none whitespace-normal text-center">
+                <p className="text-[2vw] min-[480px]:text-[1.5vw] md:text-sm lg:text-base tracking-[0.3em] min-[400px]:tracking-[0.6em] md:tracking-[0.8em] lg:tracking-[1.2em] text-muted-foreground/60 uppercase font-medium leading-none whitespace-nowrap text-center">
                     ARCHITECTURAL VISUALIZATION STUDIO
                 </p>
             </div>

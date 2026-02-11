@@ -403,13 +403,11 @@ export default function CategoriesPage() {
                                     정렬 순서
                                 </label>
                                 <Input
-                                    type="number"
                                     value={editOrder}
-                                    onChange={(e) =>
-                                        setEditOrder(
-                                            parseInt(e.target.value) || 0,
-                                        )
-                                    }
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/[^0-9]/g, '');
+                                        setEditOrder(parseInt(val) || 0);
+                                    }}
                                     className="h-10"
                                 />
                                 <p className="text-[10px] text-muted-foreground">

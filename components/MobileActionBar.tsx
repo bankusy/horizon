@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import { Phone, MessageSquare, MessageCircle } from "lucide-react";
+import { Phone, MessageSquare, MessageCircle, Globe } from "lucide-react";
 
 export default function MobileActionBar() {
   const phoneNumber = "01035007742";
+  const externalLink = "https://naver.com"; // Naver Blog placeholder
 
   return (
     <>
@@ -17,8 +18,8 @@ export default function MobileActionBar() {
               href={`tel:+82${phoneNumber}`}
               className="flex flex-col items-center gap-0.5 text-white/70 active:text-brand transition-colors"
             >
-              <Phone size={20} />
-              <span className="text-[9px] font-bold tracking-wider uppercase">Call</span>
+              <Phone size={18} />
+              <span className="text-[8px] font-bold tracking-wider uppercase">Call</span>
             </a>
 
             {/* 카카오톡 */}
@@ -28,8 +29,8 @@ export default function MobileActionBar() {
               rel="noopener noreferrer"
               className="flex flex-col items-center gap-0.5 text-[#FEE500] active:scale-95 transition-all"
             >
-              <MessageSquare size={20} fill="#FEE500" />
-              <span className="text-[9px] font-bold tracking-wider uppercase">KakaoTalk</span>
+              <MessageSquare size={18} fill="#FEE500" />
+              <span className="text-[8px] font-bold tracking-wider uppercase">Kakao</span>
             </a>
 
             {/* 문자 */}
@@ -37,21 +38,44 @@ export default function MobileActionBar() {
               href={`sms:+82${phoneNumber}`}
               className="flex flex-col items-center gap-0.5 text-white/70 active:text-brand transition-colors"
             >
-              <MessageCircle size={20} />
-              <span className="text-[9px] font-bold tracking-wider uppercase">SMS</span>
+              <MessageCircle size={18} />
+              <span className="text-[8px] font-bold tracking-wider uppercase">SMS</span>
             </a>
           </div>
         </div>
       </div>
 
-      {/* Desktop Kakao Button — md 미만에서는 숨김 */}
-      <button
-        onClick={() => window.open("https://pf.kakao.com/_your_id", "_blank")}
-        className="hidden md:flex fixed bottom-8 right-8 z-100 w-12 h-12 bg-[#FEE500] text-[#191919] items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 group rounded-[6px]"
-        aria-label="KakaoTalk Consultation"
-      >
-        <MessageSquare fill="#191919" size={24} className="group-hover:rotate-12 transition-transform" />
-      </button>
+      {/* Desktop Floating Buttons — md 미만에서는 숨김 */}
+      <div className="hidden md:flex fixed bottom-8 right-8 z-100 flex-col items-center gap-3">
+        {/* 1. 전화 버튼 */}
+        <a
+          href={`tel:+82${phoneNumber}`}
+          className="w-12 h-12 bg-brand text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 group rounded-[6px]"
+          aria-label="Phone Call"
+        >
+          <Phone size={24} fill="currentColor" className="group-hover:rotate-12 transition-transform" />
+        </a>
+
+        {/* 2. 카카오톡 버튼 */}
+        <button
+          onClick={() => window.open("https://pf.kakao.com/_your_id", "_blank")}
+          className="w-12 h-12 bg-[#FEE500] text-[#191919] flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 group rounded-[6px]"
+          aria-label="KakaoTalk Consultation"
+        >
+          <MessageSquare fill="#191919" size={24} className="group-hover:rotate-12 transition-transform" />
+        </button>
+
+        {/* 3. 외부 링크 버튼 (Web) */}
+        <a
+          href={externalLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-12 h-12 bg-zinc-800 text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 group rounded-[6px] border border-white/10"
+          aria-label="Website"
+        >
+          <Globe size={24} className="group-hover:rotate-12 transition-transform" />
+        </a>
+      </div>
     </>
   );
 }

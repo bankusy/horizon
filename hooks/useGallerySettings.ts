@@ -12,6 +12,8 @@ export function useGallerySettings(displayImages: GalleryImage[]) {
         wide: 5,
     });
     const [imageRadius, setImageRadius] = useState(0);
+    const [imageBorderWidth, setImageBorderWidth] = useState(0);
+    const [imageBorderColor, setImageBorderColor] = useState("#ffffff");
     const [isShuffled, setIsShuffled] = useState(false);
 
     // 그리드 설정 로드
@@ -31,12 +33,32 @@ export function useGallerySettings(displayImages: GalleryImage[]) {
                     .eq("key", "gallery_image_radius")
                     .single();
 
+                const { data: borderData } = await supabase
+                    .from("site_settings")
+                    .select("value")
+                    .eq("key", "gallery_image_border_width")
+                    .single();
+
+                const { data: borderColorData } = await supabase
+                    .from("site_settings")
+                    .select("value")
+                    .eq("key", "gallery_image_border_color")
+                    .single();
+
                 if (data?.value) {
                     setColumnSettings(data.value);
                 }
 
                 if (radiusData?.value) {
                     setImageRadius(Number(radiusData.value) || 0);
+                }
+
+                if (borderData?.value) {
+                    setImageBorderWidth(Number(borderData.value) || 0);
+                }
+
+                if (borderColorData?.value) {
+                    setImageBorderColor(String(borderColorData.value));
                 }
 
                 const { data: shuffleData } = await supabase
@@ -128,6 +150,8 @@ export function useGallerySettings(displayImages: GalleryImage[]) {
     return {
         columnCount,
         imageRadius,
+        imageBorderWidth,
+        imageBorderColor,
         isShuffled,
         groupedColumns
     };

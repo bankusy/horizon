@@ -1,5 +1,6 @@
 import { Filter } from "lucide-react";
 import { Category } from "@/types/gallery";
+import { useRouter } from "next/navigation";
 
 interface GalleryHeaderProps {
     selectedCategoryId: string;
@@ -14,6 +15,17 @@ export function GalleryHeader({
     categories,
     categoriesMap,
 }: GalleryHeaderProps) {
+    const router = useRouter();
+
+    const handleCategoryClick = (id: string) => {
+        if (id === "All") {
+            router.push("/", { scroll: false });
+        } else {
+            router.push(`/?category=${id}`, { scroll: false });
+        }
+        setSelectedCategoryId(id);
+    };
+
     return (
         <div className="flex flex-col xl:flex-row xl:items-end justify-between mb-12 md:mb-20 gap-8">
             <div className="border-l-8 border-brand pl-6 md:pl-10">
@@ -35,7 +47,7 @@ export function GalleryHeader({
                 </div>
                 <button
                     key="All"
-                    onClick={() => setSelectedCategoryId("All")}
+                    onClick={() => handleCategoryClick("All")}
                     className={`px-4 md:px-6 py-2 text-[10px] font-bold tracking-[0.2em] uppercase rounded-full transition-all duration-700 flex items-center gap-2 whitespace-nowrap shrink-0 ${
                         selectedCategoryId === "All"
                             ? "bg-brand text-foreground shadow-2xl shadow-brand/20"
@@ -47,7 +59,7 @@ export function GalleryHeader({
                 {categories.map((cat) => (
                     <button
                         key={cat.id}
-                        onClick={() => setSelectedCategoryId(cat.id)}
+                        onClick={() => handleCategoryClick(cat.id)}
                         className={`px-4 md:px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-500 whitespace-nowrap ${
                             selectedCategoryId === cat.id
                                 ? "bg-brand text-foreground shadow-2xl shadow-brand/20"

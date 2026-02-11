@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import { GalleryViewProps } from "@/types/gallery";
 import { supabase } from "@/lib/supabase";
 import { useGalleryData } from "@/hooks/useGalleryData";
@@ -44,6 +45,8 @@ export function GalleryView({ initialImages, nextCursor, itemsPerPage = 50 }: Ga
     const {
         columnCount,
         imageRadius,
+        imageBorderWidth,
+        imageBorderColor,
         groupedColumns
     } = useGallerySettings(displayImages);
 
@@ -85,44 +88,48 @@ export function GalleryView({ initialImages, nextCursor, itemsPerPage = 50 }: Ga
     );
 
     return (
-        <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 py-24 flex flex-col gap-24">
-            <GalleryHeader
-                selectedCategoryId={selectedCategoryId}
-                setSelectedCategoryId={setSelectedCategoryId}
-                categories={categories}
-                categoriesMap={categoriesMap}
-            />
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 py-24 flex flex-col gap-24">
+                <GalleryHeader
+                    selectedCategoryId={selectedCategoryId}
+                    setSelectedCategoryId={setSelectedCategoryId}
+                    categories={categories}
+                    categoriesMap={categoriesMap}
+                />
 
-            <MasonryGrid
-                groupedColumns={groupedColumns}
-                columnCount={columnCount}
-                imageRadius={imageRadius}
-                setLightboxIndex={setLightboxIndex}
-                setIsAutoPlaying={setIsAutoPlaying}
-                lastImageRef={lastImageRef}
-                displayImages={displayImages}
-                isLoading={isLoading}
-                isFetchingNextPage={isFetchingNextPage}
-                hasNextPage={hasNextPage}
-            />
+                <MasonryGrid
+                    groupedColumns={groupedColumns}
+                    columnCount={columnCount}
+                    imageRadius={imageRadius}
+                    imageBorderWidth={imageBorderWidth}
+                    imageBorderColor={imageBorderColor}
+                    setLightboxIndex={setLightboxIndex}
+                    setIsAutoPlaying={setIsAutoPlaying}
+                    lastImageRef={lastImageRef}
+                    displayImages={displayImages}
+                    isLoading={isLoading}
+                    isFetchingNextPage={isFetchingNextPage}
+                    hasNextPage={hasNextPage}
+                />
 
-            <LightboxOverlay
-                lightboxIndex={lightboxIndex}
-                displayImages={displayImages}
-                totalCount={totalCount || displayImages.length}
-                setLightboxIndex={setLightboxIndex}
-                isAutoPlaying={isAutoPlaying}
-                setIsAutoPlaying={setIsAutoPlaying}
-                zoomLevel={zoomLevel}
-                setZoomLevel={setZoomLevel}
-                handleZoomIn={handleZoomIn}
-                handleZoomOut={handleZoomOut}
-                handleResetZoom={handleResetZoom}
-                toggleFullscreen={toggleFullscreen}
-                nextLightbox={nextLightbox}
-                prevLightbox={prevLightbox}
-            />
-        </div>
+                <LightboxOverlay
+                    lightboxIndex={lightboxIndex}
+                    displayImages={displayImages}
+                    totalCount={totalCount || displayImages.length}
+                    setLightboxIndex={setLightboxIndex}
+                    isAutoPlaying={isAutoPlaying}
+                    setIsAutoPlaying={setIsAutoPlaying}
+                    zoomLevel={zoomLevel}
+                    setZoomLevel={setZoomLevel}
+                    handleZoomIn={handleZoomIn}
+                    handleZoomOut={handleZoomOut}
+                    handleResetZoom={handleResetZoom}
+                    toggleFullscreen={toggleFullscreen}
+                    nextLightbox={nextLightbox}
+                    prevLightbox={prevLightbox}
+                />
+            </div>
+        </Suspense>
     );
 }
 

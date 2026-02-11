@@ -75,22 +75,21 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
                 >
                     <Image
                         fill={true}
-                        className="object-cover opacity-50 transition-transform duration-3000 group-hover:scale-105"
+                        className="object-cover transition-transform duration-3000 group-hover:scale-105"
                         src={bannerItems[currentIndex]?.src || ""}
                         alt={bannerItems[currentIndex]?.title || "Banner"}
                         priority
                     />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent z-10" />
                     <div className="relative z-20 text-center text-white px-6 max-w-5xl">
                         <motion.div
                             initial={{ y: 30, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.2, duration: 1 }}
                         >
-                            <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-6 md:mb-10 uppercase leading-[0.85] drop-shadow-2xl">
+                            <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-6 md:mb-10 uppercase leading-[0.85] [text-shadow:0_4px_24px_rgba(0,0,0,0.8)]">
                                 {bannerItems[currentIndex]?.title}
                             </h1>
-                            <p className="text-base md:text-lg text-white/50 font-medium leading-relaxed tracking-wide max-w-xl mx-auto py-2">
+                            <p className="text-base md:text-lg text-white font-medium leading-relaxed tracking-wide max-w-xl mx-auto py-2 drop-shadow-[0_2px_10px_rgba(0,0,0,1)]">
                                 {bannerItems[currentIndex]?.description}
                             </p>
                         </motion.div>

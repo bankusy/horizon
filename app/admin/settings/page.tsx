@@ -13,18 +13,35 @@ interface GalleryColumnSettings {
   tablet: number;
   desktop: number;
   wide: number;
+  [key: string]: number;
+}
+
+interface GalleryColumnState {
+  mobile: string | number;
+  tablet: string | number;
+  desktop: string | number;
+  wide: string | number;
+  [key: string]: string | number;
 }
 
 export default function AdminSettingsPage() {
-  const [columns, setColumns] = useState<GalleryColumnSettings>({
-    mobile: 1,
-    tablet: 2,
-    desktop: 4,
-    wide: 5,
+  const [columns, setColumns] = useState<GalleryColumnState>({
+    mobile: "1",
+    tablet: "2",
+    desktop: "4",
+    wide: "5",
   });
-  const [borderRadius, setBorderRadius] = useState<number>(0);
+  const [vrColumns, setVrColumns] = useState<GalleryColumnState>({
+    mobile: "1",
+    tablet: "2",
+    desktop: "3",
+    wide: "3",
+  });
+  const [borderRadius, setBorderRadius] = useState<string | number>(0);
+  const [borderWidth, setBorderWidth] = useState<string | number>(0);
+  const [borderColor, setBorderColor] = useState<string>("#ffffff");
   const [isShuffled, setIsShuffled] = useState<boolean>(false);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(50);
+  const [itemsPerPage, setItemsPerPage] = useState<string | number>(50);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -50,7 +67,27 @@ export default function AdminSettingsPage() {
         }
 
         if (!radiusError && radiusData) {
-            setBorderRadius(Number(radiusData.value) || 0);
+            setBorderRadius(radiusData.value);
+        }
+
+        const { data: borderData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "gallery_image_border_width")
+          .single();
+        
+        if (borderData) {
+          setBorderWidth(borderData.value);
+        }
+
+        const { data: borderColorData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "gallery_image_border_color")
+          .single();
+        
+        if (borderColorData) {
+          setBorderColor(String(borderColorData.value));
         }
 
         const { data: shuffleData } = await supabase
@@ -72,6 +109,16 @@ export default function AdminSettingsPage() {
         if (pagingData?.value !== undefined) {
           setItemsPerPage(Number(pagingData.value) || 50);
         }
+
+        const { data: vrColumnData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "vr_columns")
+          .single();
+
+        if (vrColumnData?.value) {
+          setVrColumns(vrColumnData.value as GalleryColumnSettings);
+        }
       } catch (e) {
         console.error("Settings load failed:", e);
       } finally {
@@ -86,11 +133,25 @@ export default function AdminSettingsPage() {
     if (!supabase) return;
     setIsSaving(true);
     try {
+      const validatedColumns = {
+        mobile: Math.max(1, Math.min(12, parseInt(String(columns.mobile)) || 1)),
+        tablet: Math.max(1, Math.min(12, parseInt(String(columns.tablet)) || 2)),
+        desktop: Math.max(1, Math.min(12, parseInt(String(columns.desktop)) || 4)),
+        wide: Math.max(1, Math.min(12, parseInt(String(columns.wide)) || 5)),
+      };
+
+      const validatedVrColumns = {
+        mobile: Math.max(1, Math.min(12, parseInt(String(vrColumns.mobile)) || 1)),
+        tablet: Math.max(1, Math.min(12, parseInt(String(vrColumns.tablet)) || 2)),
+        desktop: Math.max(1, Math.min(12, parseInt(String(vrColumns.desktop)) || 3)),
+        wide: Math.max(1, Math.min(12, parseInt(String(vrColumns.wide)) || 3)),
+      };
+
       const { error } = await supabase
         .from("site_settings")
         .upsert({ 
           key: "gallery_columns", 
-          value: columns,
+          value: validatedColumns,
           updated_at: new Date().toISOString()
         });
 
@@ -98,7 +159,23 @@ export default function AdminSettingsPage() {
         .from("site_settings")
         .upsert({ 
           key: "gallery_image_radius", 
-          value: borderRadius,
+          value: Math.max(0, Math.min(100, parseInt(String(borderRadius)) || 0)),
+          updated_at: new Date().toISOString()
+        });
+
+      await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "gallery_image_border_width", 
+          value: Math.max(0, Math.min(20, parseInt(String(borderWidth)) || 0)),
+          updated_at: new Date().toISOString()
+        });
+
+      await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "gallery_image_border_color", 
+          value: borderColor || "#ffffff",
           updated_at: new Date().toISOString()
         });
       
@@ -116,9 +193,25 @@ export default function AdminSettingsPage() {
         .from("site_settings")
         .upsert({ 
           key: "gallery_items_per_page", 
-          value: itemsPerPage,
+          value: Math.max(1, parseInt(String(itemsPerPage)) || 50),
           updated_at: new Date().toISOString()
         });
+
+      await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "vr_columns", 
+          value: validatedVrColumns,
+          updated_at: new Date().toISOString()
+        });
+      
+      // Update local state with validated values
+      setColumns(validatedColumns);
+      setVrColumns(validatedVrColumns);
+      setBorderRadius(Math.max(0, Math.min(100, parseInt(String(borderRadius)) || 0)));
+      setBorderWidth(Math.max(0, Math.min(20, parseInt(String(borderWidth)) || 0)));
+      setBorderColor(borderColor || "#ffffff");
+      setItemsPerPage(Math.max(1, parseInt(String(itemsPerPage)) || 50));
 
       toast.success("설정이 저장되었습니다.");
     } catch (e) {
@@ -129,8 +222,12 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const updateColumn = (key: keyof GalleryColumnSettings, value: number) => {
-    setColumns(prev => ({ ...prev, [key]: Math.max(1, Math.min(8, value)) }));
+  const updateColumn = (key: string, value: string) => {
+    setColumns((prev: GalleryColumnState) => ({ ...prev, [key]: value }));
+  };
+
+  const updateVRColumn = (key: string, value: string) => {
+    setVrColumns((prev: GalleryColumnState) => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -170,11 +267,11 @@ export default function AdminSettingsPage() {
                       모바일 (640px 이하)
                     </label>
                     <Input
-                      type="number"
-                      min={1}
-                      max={8}
                       value={columns.mobile}
-                      onChange={(e) => updateColumn("mobile", parseInt(e.target.value) || 1)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        updateColumn("mobile", val);
+                      }}
                       className="h-10 rounded-lg"
                     />
                   </div>
@@ -183,11 +280,11 @@ export default function AdminSettingsPage() {
                       태블릿 (768px ~ 1024px)
                     </label>
                     <Input
-                      type="number"
-                      min={1}
-                      max={8}
                       value={columns.tablet}
-                      onChange={(e) => updateColumn("tablet", parseInt(e.target.value) || 2)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        updateColumn("tablet", val);
+                      }}
                       className="h-10 rounded-lg"
                     />
                   </div>
@@ -196,11 +293,11 @@ export default function AdminSettingsPage() {
                       데스크탑 (1280px ~ 1536px)
                     </label>
                     <Input
-                      type="number"
-                      min={1}
-                      max={8}
                       value={columns.desktop}
-                      onChange={(e) => updateColumn("desktop", parseInt(e.target.value) || 4)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        updateColumn("desktop", val);
+                      }}
                       className="h-10 rounded-lg"
                     />
                   </div>
@@ -209,11 +306,11 @@ export default function AdminSettingsPage() {
                       와이드 (1536px 이상)
                     </label>
                     <Input
-                      type="number"
-                      min={1}
-                      max={8}
                       value={columns.wide}
-                      onChange={(e) => updateColumn("wide", parseInt(e.target.value) || 5)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        updateColumn("wide", val);
+                      }}
                       className="h-10 rounded-lg"
                     />
                   </div>
@@ -231,6 +328,96 @@ export default function AdminSettingsPage() {
                       <Save className="mr-2 h-4 w-4 stroke-3" />
                     )}
                     현재 설정 저장
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* VR 그리드 설정 */}
+        <Card className="rounded-none border-border bg-card overflow-hidden">
+          <CardHeader className="p-8 border-b border-border bg-secondary/20">
+            <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3 text-foreground">
+              <LayoutGrid size={24} className="text-primary" />
+              VR 그리드 설정
+            </CardTitle>
+            <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-1">VR 아카이브 페이지의 화면 크기별 카드 배열을 설정합니다.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 space-y-8">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+                      모바일
+                    </label>
+                    <Input
+                      value={vrColumns.mobile}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        updateVRColumn("mobile", val);
+                      }}
+                      className="h-10 rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+                      태블릿
+                    </label>
+                    <Input
+                      value={vrColumns.tablet}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        updateVRColumn("tablet", val);
+                      }}
+                      className="h-10 rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+                      데스크탑
+                    </label>
+                    <Input
+                      value={vrColumns.desktop}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        updateVRColumn("desktop", val);
+                      }}
+                      className="h-10 rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+                      와이드
+                    </label>
+                    <Input
+                      value={vrColumns.wide}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        updateVRColumn("wide", val);
+                      }}
+                      className="h-10 rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-8 border-t border-border">
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={isSaving}
+                    className="rounded-none px-10 h-12 font-black uppercase tracking-widest text-[11px] transition-all duration-500"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-2 h-4 w-4 stroke-3" />
+                    )}
+                    VR 설정 저장
                   </Button>
                 </div>
               </>
@@ -280,12 +467,11 @@ export default function AdminSettingsPage() {
               </div>
               <div className="w-32">
                 <Input
-                  type="number"
-                  min={10}
-                  max={200}
-                  step={10}
                   value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(Math.max(10, parseInt(e.target.value) || 50))}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setItemsPerPage(val);
+                  }}
                   className="h-10 rounded-lg text-right font-mono"
                 />
               </div>
@@ -320,29 +506,82 @@ export default function AdminSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
-                  이미지 라운드 (px)
-                </label>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-4 px-4 py-6 bg-secondary/10 border border-border/50">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-foreground uppercase tracking-widest">
+                    모서리 곡률 (PX)
+                  </label>
+                  <span className="text-[10px] font-mono opacity-50">{borderRadius}px</span>
+                </div>
                 <div className="flex items-center gap-4">
                   <Input
-                    type="number"
-                    min={0}
-                    max={100}
                     value={borderRadius}
-                    onChange={(e) => setBorderRadius(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="h-10 rounded-lg"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setBorderRadius(val);
+                    }}
+                    className="h-10 rounded-none bg-background border-border/50 text-right font-mono"
+                    placeholder="0"
                   />
                   <div 
-                    className="h-10 w-10 bg-primary transition-all duration-300 border border-border"
-                    style={{ borderRadius: `${borderRadius}px` }}
-                    title="미리보기"
+                    className="h-10 w-10 shrink-0 bg-primary transition-all duration-300 border border-border"
+                    style={{ borderRadius: `${parseInt(String(borderRadius)) || 0}px` }}
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground">
-                  0으로 설정하면 직각 모서리가 됩니다.
-                </p>
+              </div>
+
+              <div className="space-y-4 px-4 py-6 bg-secondary/10 border border-border/50">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-foreground uppercase tracking-widest">
+                    보더 두께 (PX)
+                  </label>
+                  <span className="text-[10px] font-mono opacity-50">{borderWidth}px</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Input
+                    value={borderWidth}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setBorderWidth(val);
+                    }}
+                    className="h-10 rounded-none bg-background border-border/50 text-right font-mono"
+                    placeholder="0"
+                  />
+                  <div 
+                    className="h-10 w-10 shrink-0 bg-background transition-all duration-300 border-primary"
+                    style={{ borderWidth: `${parseInt(String(borderWidth)) || 0}px` }}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 px-4 py-6 bg-secondary/10 border border-border/50">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-foreground uppercase tracking-widest">
+                    보더 컬러
+                  </label>
+                  <span className="text-[10px] font-mono opacity-50 uppercase">{borderColor}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <Input
+                      value={borderColor}
+                      onChange={(e) => setBorderColor(e.target.value)}
+                      className="h-10 rounded-none bg-background border-border/50 pl-10 font-mono text-sm uppercase"
+                      placeholder="#FFFFFF"
+                    />
+                    <div 
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border border-border"
+                      style={{ backgroundColor: borderColor }}
+                    />
+                  </div>
+                  <Input 
+                    type="color"
+                    value={borderColor}
+                    onChange={(e) => setBorderColor(e.target.value)}
+                    className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer overflow-hidden"
+                  />
+                </div>
               </div>
             </div>
             <div className="flex justify-end pt-8 mt-8 border-t border-border">
@@ -398,3 +637,4 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+

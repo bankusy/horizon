@@ -36,7 +36,7 @@ function FooterRow({ label, value, isLink, href }: FooterRowProps) {
       <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 transition-colors duration-500 group-hover:text-muted-foreground/60">
         {label}
       </span>
-      <span className={`text-sm font-medium tracking-tight transition-colors duration-500 ${isLink ? 'text-muted-foreground/80 hover:text-foreground' : 'text-muted-foreground/90'}`}>
+      <span className={`text-sm font-medium tracking-tight transition-colors duration-500 whitespace-nowrap ${isLink ? 'text-muted-foreground/80 hover:text-foreground' : 'text-muted-foreground/90'}`}>
         {value}
       </span>
     </div>
@@ -100,12 +100,12 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-24 pt-12 border-t border-border/30 flex flex-col md:flex-row justify-between items-center gap-8 text-muted-foreground/40">
-          <div className="text-[10px] font-bold tracking-[0.2em] uppercase flex flex-col md:flex-row gap-4 md:gap-8 items-center text-center">
+          <div className="text-[10px] font-bold tracking-[0.2em] uppercase flex flex-col md:flex-row gap-4 md:gap-8 items-center text-center whitespace-nowrap">
             <span>© {new Date().getFullYear()} HORIZON STUDIO</span>
             <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-border" />
             <span>All Rights Reserved</span>
           </div>
-          <div className="flex gap-12">
+          <div className="flex gap-12 whitespace-nowrap">
             <a href="#" className="text-[10px] font-bold tracking-widest uppercase hover:text-foreground transition-all duration-500">Privacy</a>
             <a href="#" className="text-[10px] font-bold tracking-widest uppercase hover:text-foreground transition-all duration-500">Terms</a>
           </div>

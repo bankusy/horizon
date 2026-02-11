@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Play } from "lucide-react";
 import Image from "next/image";
 import { GalleryImage } from "@/types/gallery";
@@ -8,6 +9,8 @@ interface MasonryGridProps {
     groupedColumns: (GalleryImage & { globalIdx: number })[][];
     columnCount: number;
     imageRadius: number;
+    imageBorderWidth: number;
+    imageBorderColor: string;
     setLightboxIndex: (index: number | null) => void;
     setIsAutoPlaying: (isPlaying: boolean) => void;
     lastImageRef: (node: HTMLDivElement) => void;
@@ -17,10 +20,70 @@ interface MasonryGridProps {
     hasNextPage: boolean;
 }
 
+function VideoGridItem({ img }: { img: GalleryImage }) {
+    const [isHovered, setIsHovered] = useState(false);
+    
+    return (
+        <div 
+            className="relative w-full h-full"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {/* Thumbnail - Always present */}
+            <Image
+                width={800}
+                height={
+                    800 / (img.aspect_ratio || 1)
+                }
+                className={`w-full h-auto block transition-opacity duration-500 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
+                style={{
+                    aspectRatio: img.aspect_ratio ? `${img.aspect_ratio}` : "auto",
+                }}
+                src={img.src}
+                alt={img.alt}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
+            />
+
+            {/* Hover Video Player */}
+            <div className={`absolute inset-0 transition-opacity duration-700 ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                {isHovered && (
+                    <>
+                        <iframe
+                            width="100%"
+                            height="100%"
+                            src={`https://www.youtube.com/embed/${getYoutubeId(img.video_url!)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYoutubeId(img.video_url!)}&playsinline=1&enablejsapi=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
+                            title="YouTube grid player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            className="w-full h-full scale-[1.35] pointer-events-none"
+                            style={{
+                                aspectRatio: img.aspect_ratio ? `${img.aspect_ratio}` : "16/9",
+                            }}
+                        />
+                        {/* Catch clicks and let them bubble up to the motion.div */}
+                        <div className="absolute inset-0 z-10" />
+                    </>
+                )}
+            </div>
+
+            {/* Play Indicator Overlay */}
+            {!isHovered && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-opacity duration-300">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white shadow-2xl transition-transform duration-500 group-hover:scale-110">
+                        <Play size={24} fill="currentColor" className="ml-1" />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function MasonryGrid({
     groupedColumns,
     columnCount,
     imageRadius,
+    imageBorderWidth,
+    imageBorderColor,
     setLightboxIndex,
     setIsAutoPlaying,
     lastImageRef,
@@ -64,60 +127,14 @@ export function MasonryGrid({
                                     className="group relative w-full overflow-hidden bg-zinc-100 transition-all duration-500 md:hover:shadow-xl md:hover:shadow-black/10 cursor-zoom-in"
                                     style={{
                                         borderRadius: `${imageRadius}px`,
+                                        borderWidth: `${imageBorderWidth}px`,
+                                        borderStyle: imageBorderWidth > 0 ? "solid" : "none",
+                                        borderColor: imageBorderColor,
                                     }}
                                 >
                                     {img.type === "video" || img.video_url ? (
-                                        <div className="relative w-full h-full group-hover:scale-110 group-hover:brightness-110 transition-all duration-700 ease-out">
-                                            {/* Mobile: Thumbnail + Play Icon */}
-                                            <div className="block md:hidden w-full h-full relative">
-                                                <Image
-                                                    width={800}
-                                                    height={
-                                                        800 /
-                                                        (img.aspect_ratio || 1)
-                                                    }
-                                                    className="w-full h-auto block"
-                                                    style={{
-                                                        aspectRatio:
-                                                            img.aspect_ratio
-                                                                ? `${img.aspect_ratio}`
-                                                                : "auto",
-                                                    }}
-                                                    src={img.src}
-                                                    alt={img.alt}
-                                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
-                                                    priority={globalIdx < 6}
-                                                />
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 text-white shadow-lg">
-                                                        <Play
-                                                            size={20}
-                                                            fill="currentColor"
-                                                            className="ml-1"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Desktop: Auto-playing Video */}
-                                            <div className="hidden md:block w-full h-full relative bg-black">
-                                                <iframe
-                                                    width="100%"
-                                                    height="100%"
-                                                    src={`https://www.youtube.com/embed/${getYoutubeId(img.video_url!)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYoutubeId(img.video_url!)}&playsinline=1&enablejsapi=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
-                                                    title="YouTube grid player"
-                                                    frameBorder="0"
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                    className="w-full h-full scale-[1.35] pointer-events-none"
-                                                    style={{
-                                                        aspectRatio:
-                                                            img.aspect_ratio
-                                                                ? `${img.aspect_ratio}`
-                                                                : "16/9",
-                                                    }}
-                                                />
-                                                <div className="absolute inset-0 z-10 bg-transparent" />
-                                            </div>
+                                        <div className="relative w-full h-full group-hover:scale-110 transition-all duration-700 ease-out bg-black">
+                                            <VideoGridItem img={img} />
                                         </div>
                                     ) : (
                                         <>

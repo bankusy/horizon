@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Category, GalleryImage } from "@/types/gallery";
@@ -94,7 +95,16 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
 }
 
 export function useGalleryData(initialImages: GalleryImage[], nextCursor: number | null, itemsPerPage: number = 50, isShuffled: boolean = false) {
-    const [selectedCategoryId, setSelectedCategoryId] = useState("All");
+    const searchParams = useSearchParams();
+    const queryCategory = searchParams.get("category") || "All";
+    
+    const [selectedCategoryId, setSelectedCategoryId] = useState(queryCategory);
+
+    // Sync state with URL search params
+    useEffect(() => {
+        setSelectedCategoryId(queryCategory);
+    }, [queryCategory]);
+
     const [categories, setCategories] = useState<Category[]>([]);
     const [categoriesMap, setCategoriesMap] = useState<Record<string, string>>(
         {},
