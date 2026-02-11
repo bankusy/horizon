@@ -75,9 +75,10 @@ async function getInitialData() {
     };
 }
 
-// 메인 페이지의 캐싱을 비활성화하여 실시간 데이터 반영 (대시보드 수정 즉시 반영)
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
+// 메인 페이지의 캐싱을 60초(ISR)로 설정하여 CPU 부하 감소
+// (대시보드 수정 사항은 최대 1분 후 반영됨)
+export const revalidate = 60;
+export const dynamic = "error"; // "force-dynamic" 제거하고 정적 생성을 기본으로 시도 (데이터 페칭에 따라 자동 결정)
 
 export default async function Home() {
     const { banners, initialImages, nextCursor, itemsPerPage, heroSettings } = await getInitialData();
