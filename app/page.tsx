@@ -2,8 +2,8 @@ import { supabase } from "@/lib/supabase";
 import { Navigation } from "@/components/Navigation";
 import { HeroHeader } from "@/components/HeroHeader";
 import { BannerCarousel } from "@/components/BannerCarousel";
-import { GalleryView } from "@/components/GalleryView";
 import { Footer } from "@/components/Footer";
+import DynamicGalleryView from "@/components/DynamicGalleryView";
 
 // 서버 사이드 데이터 페칭 함수
 async function getInitialData() {
@@ -91,7 +91,7 @@ export default async function Home() {
 
                 <BannerCarousel initialBanners={banners} />
 
-                <GalleryView 
+                <DynamicGalleryView 
                     initialImages={initialImages} 
                     nextCursor={nextCursor} 
                     itemsPerPage={itemsPerPage}

@@ -51,6 +51,9 @@ export default function AdminSettingsPage() {
   const [heroHeadingSize, setHeroHeadingSize] = useState<string | number>("");
   const [heroSubheaderSize, setHeroSubheaderSize] = useState<string | number>("");
   const [heroDescriptionSize, setHeroDescriptionSize] = useState<string | number>("");
+  const [heroHeadingSizeMobile, setHeroHeadingSizeMobile] = useState<string | number>("");
+  const [heroSubheaderSizeMobile, setHeroSubheaderSizeMobile] = useState<string | number>("");
+  const [heroDescriptionSizeMobile, setHeroDescriptionSizeMobile] = useState<string | number>("");
   const [isShuffled, setIsShuffled] = useState<boolean>(false);
   const [itemsPerPage, setItemsPerPage] = useState<string | number>(50);
   const [initialItems, setInitialItems] = useState<string | number>(50);
@@ -136,9 +139,12 @@ export default function AdminSettingsPage() {
               case "hero_heading_color": setHeroHeadingColor(String(item.value)); break;
               case "hero_subheader_color": setHeroSubheaderColor(String(item.value)); break;
               case "hero_description_color": setHeroDescriptionColor(String(item.value)); break;
-              case "hero_heading_size": setHeroHeadingSize(item.value); break;
+               case "hero_heading_size": setHeroHeadingSize(item.value); break;
               case "hero_subheader_size": setHeroSubheaderSize(item.value); break;
               case "hero_description_size": setHeroDescriptionSize(item.value); break;
+              case "hero_heading_size_mobile": setHeroHeadingSizeMobile(item.value); break;
+              case "hero_subheader_size_mobile": setHeroSubheaderSizeMobile(item.value); break;
+              case "hero_description_size_mobile": setHeroDescriptionSizeMobile(item.value); break;
             }
           });
         }
@@ -265,9 +271,12 @@ export default function AdminSettingsPage() {
         { key: "hero_heading_color", value: heroHeadingColor },
         { key: "hero_subheader_color", value: heroSubheaderColor },
         { key: "hero_description_color", value: heroDescriptionColor },
-        { key: "hero_heading_size", value: heroHeadingSize },
+         { key: "hero_heading_size", value: heroHeadingSize },
         { key: "hero_subheader_size", value: heroSubheaderSize },
         { key: "hero_description_size", value: heroDescriptionSize },
+        { key: "hero_heading_size_mobile", value: heroHeadingSizeMobile },
+        { key: "hero_subheader_size_mobile", value: heroSubheaderSizeMobile },
+        { key: "hero_description_size_mobile", value: heroDescriptionSizeMobile },
       ];
 
       for (const setting of heroSettings) {
@@ -745,16 +754,20 @@ export default function AdminSettingsPage() {
               <div className="pb-2 border-b border-border/50">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary">메인 타이틀 (Heading)</h3>
               </div>
-              <div className="grid gap-6 md:grid-cols-3">
+               <div className="grid gap-6 md:grid-cols-4">
                 <div className="md:col-span-2 space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-50">내용</label>
                   <Input value={heroHeading} onChange={(e) => setHeroHeading(e.target.value)} className="h-12 rounded-none font-medium" placeholder="WE VISUALIZE THE UNBUILT" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 크기 (PX/VW)</label>
-                  <Input value={heroHeadingSize} onChange={(e) => setHeroHeadingSize(e.target.value)} className="h-12 rounded-none font-mono" placeholder="기본값 (배율)" />
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">데스크탑 크기</label>
+                  <Input value={heroHeadingSize} onChange={(e) => setHeroHeadingSize(e.target.value)} className="h-12 rounded-none font-mono" placeholder="예: 80px" />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">모바일 크기</label>
+                  <Input value={heroHeadingSizeMobile} onChange={(e) => setHeroHeadingSizeMobile(e.target.value)} className="h-12 rounded-none font-mono" placeholder="예: 32px" />
+                </div>
+                <div className="md:col-span-2 space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 색상</label>
                   <div className="flex gap-2">
                     <Input value={heroHeadingColor} onChange={(e) => setHeroHeadingColor(e.target.value)} className="h-12 rounded-none font-mono uppercase" placeholder="#FFFFFF (기본)" />
@@ -769,16 +782,20 @@ export default function AdminSettingsPage() {
               <div className="pb-2 border-b border-border/50">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary">상단 보조 문구 (Subheader)</h3>
               </div>
-              <div className="grid gap-6 md:grid-cols-3">
+               <div className="grid gap-6 md:grid-cols-4">
                 <div className="md:col-span-2 space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-50">내용</label>
                   <Input value={heroSubheader} onChange={(e) => setHeroSubheader(e.target.value)} className="h-12 rounded-none font-medium" placeholder="CAPTURING ALL THE ESSENCE" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 크기 (PX/VW)</label>
-                  <Input value={heroSubheaderSize} onChange={(e) => setHeroSubheaderSize(e.target.value)} className="h-12 rounded-none font-mono" placeholder="기본값" />
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">데스크탑 크기</label>
+                  <Input value={heroSubheaderSize} onChange={(e) => setHeroSubheaderSize(e.target.value)} className="h-12 rounded-none font-mono" placeholder="예: 14px" />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">모바일 크기</label>
+                  <Input value={heroSubheaderSizeMobile} onChange={(e) => setHeroSubheaderSizeMobile(e.target.value)} className="h-12 rounded-none font-mono" placeholder="예: 10px" />
+                </div>
+                <div className="md:col-span-2 space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 색상</label>
                   <div className="flex gap-2">
                     <Input value={heroSubheaderColor} onChange={(e) => setHeroSubheaderColor(e.target.value)} className="h-12 rounded-none font-mono uppercase" placeholder="#FFFFFF (기본)" />
@@ -793,16 +810,20 @@ export default function AdminSettingsPage() {
               <div className="pb-2 border-b border-border/50">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary">하단 설명 문구 (Description)</h3>
               </div>
-              <div className="grid gap-6 md:grid-cols-3">
+               <div className="grid gap-6 md:grid-cols-4">
                 <div className="md:col-span-2 space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-50">내용</label>
                   <Input value={heroDescription} onChange={(e) => setHeroDescription(e.target.value)} className="h-12 rounded-none font-medium" placeholder="ARCHITECTURAL VISUALIZATION STUDIO" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 크기 (PX/VW)</label>
-                  <Input value={heroDescriptionSize} onChange={(e) => setHeroDescriptionSize(e.target.value)} className="h-12 rounded-none font-mono" placeholder="기본값" />
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">데스크탑 크기</label>
+                  <Input value={heroDescriptionSize} onChange={(e) => setHeroDescriptionSize(e.target.value)} className="h-12 rounded-none font-mono" placeholder="예: 16px" />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50">모바일 크기</label>
+                  <Input value={heroDescriptionSizeMobile} onChange={(e) => setHeroDescriptionSizeMobile(e.target.value)} className="h-12 rounded-none font-mono" placeholder="예: 11px" />
+                </div>
+                <div className="md:col-span-2 space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-50">글자 색상</label>
                   <div className="flex gap-2">
                     <Input value={heroDescriptionColor} onChange={(e) => setHeroDescriptionColor(e.target.value)} className="h-12 rounded-none font-mono uppercase" placeholder="기본값" />

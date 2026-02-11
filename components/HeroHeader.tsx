@@ -16,6 +16,9 @@ interface HeroHeaderProps {
         hero_heading_size?: string;
         hero_subheader_size?: string;
         hero_description_size?: string;
+        hero_heading_size_mobile?: string;
+        hero_subheader_size_mobile?: string;
+        hero_description_size_mobile?: string;
     };
 }
 
@@ -23,6 +26,18 @@ const formatSize = (size: string | number | undefined, fallback: string) => {
     if (!size || size === "") return fallback;
     if (/^\d+(\.\d+)?$/.test(String(size))) return `${size}px`;
     return String(size);
+};
+
+const getFluidSize = (
+    mobile: string | number | undefined, 
+    desktop: string | number | undefined, 
+    defMobile: string, 
+    defDesktop: string, 
+    vwScale: string
+) => {
+    const m = formatSize(mobile, defMobile);
+    const d = formatSize(desktop, defDesktop);
+    return `clamp(${m}, ${vwScale}, ${d})`;
 };
 
 export function HeroHeader({ settings }: HeroHeaderProps) {
@@ -47,7 +62,13 @@ export function HeroHeader({ settings }: HeroHeaderProps) {
                         className="font-bold tracking-[0.4em] min-[400px]:tracking-[0.6em] md:tracking-[1em] uppercase mb-3 md:mb-6 text-center whitespace-nowrap"
                         style={{ 
                             color: settings?.hero_subheader_color || "inherit",
-                            fontSize: formatSize(settings?.hero_subheader_size, "clamp(7px, 1.5vw, 12px)")
+                            fontSize: getFluidSize(
+                                settings?.hero_subheader_size_mobile, 
+                                settings?.hero_subheader_size, 
+                                "10px", 
+                                "14px", 
+                                "1.5vw"
+                            )
                         }}
                     >
                         {subheader}
@@ -62,7 +83,13 @@ export function HeroHeader({ settings }: HeroHeaderProps) {
                             className="font-light tracking-tighter leading-[0.9] text-center whitespace-nowrap"
                             style={{ 
                                 color: settings?.hero_heading_color || "inherit",
-                                fontSize: formatSize(settings?.hero_heading_size, "clamp(12px, 5vw, 5.5rem)")
+                                fontSize: getFluidSize(
+                                    settings?.hero_heading_size_mobile, 
+                                    settings?.hero_heading_size, 
+                                    "32px", 
+                                    "7rem", 
+                                    "6vw"
+                                )
                             }}
                         />
                         <div className="w-1 h-1 bg-brand/30 rotate-45 hidden md:block shrink-0" />
@@ -72,7 +99,13 @@ export function HeroHeader({ settings }: HeroHeaderProps) {
                     className="tracking-[0.3em] min-[400px]:tracking-[0.5em] md:tracking-[0.8em] lg:tracking-[1em] uppercase font-medium leading-none text-center opacity-40 shrink-0 whitespace-nowrap"
                     style={{ 
                         color: settings?.hero_description_color || "inherit",
-                        fontSize: formatSize(settings?.hero_description_size, "clamp(8px, 1.2vw, 14px)")
+                        fontSize: getFluidSize(
+                            settings?.hero_description_size_mobile, 
+                            settings?.hero_description_size, 
+                            "11px", 
+                            "16px", 
+                            "1.2vw"
+                        )
                     }}
                 >
                     {description}

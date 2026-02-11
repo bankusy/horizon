@@ -13,6 +13,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
@@ -57,6 +58,7 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   return (
     <Sidebar className="border-r border-border bg-sidebar">
@@ -90,7 +92,11 @@ export function AppSidebar() {
                     isActive={pathname === item.url}
                     className="h-10 px-3 rounded-md transition-all hover:bg-muted data-[active=true]:bg-secondary data-[active=true]:text-secondary-foreground"
                   >
-                    <Link href={item.url} className="flex items-center gap-3">
+                    <Link 
+                      href={item.url} 
+                      className="flex items-center gap-3"
+                      onClick={() => isMobile && setOpenMobile(false)}
+                    >
                       <item.icon size={18} className={pathname === item.url ? "text-foreground" : "text-muted-foreground"} />
                       <span className="text-sm font-medium">{item.title}</span>
                     </Link>
@@ -121,7 +127,11 @@ export function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="h-10 px-3 rounded-md hover:bg-muted">
-              <Link href="/" className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors">
+              <Link 
+                href="/" 
+                className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => isMobile && setOpenMobile(false)}
+              >
                 <User size={18} />
                 <span className="text-sm font-medium">웹사이트 바로가기</span>
               </Link>

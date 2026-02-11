@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
     /* config options here */
     images: {
+        unoptimized: true, // 전역으로 이미지 최적화 끔
+
         remotePatterns: [
             {
                 protocol: "https",
@@ -26,12 +28,12 @@ const nextConfig: NextConfig = {
             },
             {
                 protocol: "https",
-                hostname: "ifhbxabvytjaqeciikhq.supabase.co"
+                hostname: "ifhbxabvytjaqeciikhq.supabase.co",
             },
             {
                 protocol: "https",
-                hostname: "img.youtube.com"
-            }
+                hostname: "img.youtube.com",
+            },
         ],
     },
 };
