@@ -57,7 +57,7 @@ export default function MobileActionBar() {
         {/* 1. 전화 버튼 */}
         <a
           href={`tel:+82${phoneNumber}`}
-          className="w-12 h-12 bg-brand text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 group rounded-[6px]"
+          className="w-12 h-12 bg-[#7FC243] text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 group rounded-[6px]"
           aria-label="Phone Call"
         >
           <Phone size={24} fill="currentColor" className="group-hover:rotate-12 transition-transform" />
