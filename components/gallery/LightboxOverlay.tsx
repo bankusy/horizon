@@ -149,7 +149,7 @@ export function LightboxOverlay({
                                                             e.stopPropagation();
                                                             if (isLoaded) setLightboxIndex(i);
                                                         }}
-                                                        className={`h-px transition-all duration-500 rounded-full shrink-0 ${
+                                                        className={`h-1 transition-all duration-500 rounded-full shrink-0 ${
                                                             isActive ? "w-8 md:w-16 bg-brand" : isLoaded ? "w-2 md:w-4 bg-white/10 hover:bg-white/30" : "w-2 md:w-4 bg-white/5 cursor-default"
                                                         }`}
                                                     />
