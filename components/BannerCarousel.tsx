@@ -117,7 +117,7 @@ export function BannerCarousel({ initialBanners }: BannerCarouselProps) {
                     <button
                         key={i}
                         onClick={() => setCurrentIndex(i)}
-                        className={`h-px transition-all duration-1000 rounded-full ${i === currentIndex ? "w-16 md:w-32 bg-brand" : "w-2 md:w-4 bg-white/20 hover:bg-white/40"}`}
+                        className={`h-1 transition-all duration-1000 rounded-full ${i === currentIndex ? "w-16 md:w-32 bg-brand" : "w-2 md:w-4 bg-white/20 hover:bg-white/40"}`}
                     />
                 ))}
             </div>

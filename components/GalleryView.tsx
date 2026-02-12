@@ -88,7 +88,7 @@ function GalleryContent({ initialImages, nextCursor, itemsPerPage = 50 }: Galler
     );
 
     return (
-        <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 py-24 flex flex-col gap-24">
+        <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 pt-24 pb-12 flex flex-col gap-24">
             <GalleryHeader
                 selectedCategoryId={selectedCategoryId}
                 setSelectedCategoryId={setSelectedCategoryId}

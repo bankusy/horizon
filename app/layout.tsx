@@ -26,6 +26,7 @@ export default async function RootLayout({
   // Fetch Background Color Settings
   let bgLight = "#ffffff";
   let bgDark = "#09090b";
+  let brandPrimary = "#7FC243";
 
   if (supabase) {
     const { data: lightData } = await supabase
@@ -43,6 +44,14 @@ export default async function RootLayout({
       .single();
     
     if (darkData?.value) bgDark = String(darkData.value);
+
+    const { data: brandData } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "brand_primary")
+      .single();
+    
+    if (brandData?.value) brandPrimary = String(brandData.value);
   }
 
   return (
@@ -51,6 +60,7 @@ export default async function RootLayout({
         <style dangerouslySetInnerHTML={{ __html: `
           :root {
             --background: ${bgLight};
+            --brand-primary: ${brandPrimary};
           }
           @media (prefers-color-scheme: dark) {
             :root {

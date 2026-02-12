@@ -27,7 +27,7 @@ export function GalleryHeader({
     };
 
     return (
-        <div className="flex flex-col xl:flex-row xl:items-end justify-between mb-12 md:mb-20 gap-8">
+        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-8">
             <div className="border-l-8 border-brand pl-6 md:pl-10">
                 <h2 className="text-5xl md:text-8xl font-light tracking-tighter mb-4 uppercase leading-none">
                     {selectedCategoryId === "All"

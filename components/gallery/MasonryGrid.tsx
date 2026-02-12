@@ -195,7 +195,7 @@ export function MasonryGrid({
             )}
 
             {!hasNextPage && !isLoading && (
-                <div className="w-full flex flex-col items-center justify-center py-32 opacity-20">
+                <div className="w-full flex flex-col items-center justify-center py-16 opacity-20">
                     <div className="w-24 h-px bg-foreground mb-8" />
                     <p className="text-[10px] font-black tracking-[1em] uppercase">
                         Complete Archive Reached
@@ -204,7 +204,7 @@ export function MasonryGrid({
             )}
 
             {!isLoading && displayImages.length === 0 && (
-                <div className="w-full flex flex-col items-center justify-center py-32 opacity-40">
+                <div className="w-full flex flex-col items-center justify-center py-16 opacity-40">
                     <p className="text-[10px] font-black tracking-[1em] uppercase">
                         No Images Found
                     </p>

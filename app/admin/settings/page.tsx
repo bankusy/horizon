@@ -42,6 +42,7 @@ export default function AdminSettingsPage() {
   const [borderColor, setBorderColor] = useState<string>("#ffffff");
   const [bgLight, setBgLight] = useState<string>("#ffffff");
   const [bgDark, setBgDark] = useState<string>("#09090b");
+  const [brandPrimary, setBrandPrimary] = useState<string>("#7FC243");
   const [heroHeading, setHeroHeading] = useState<string>("WE VISUALIZE THE UNBUILT");
   const [heroSubheader, setHeroSubheader] = useState<string>("CAPTURING ALL THE ESSENCE");
   const [heroDescription, setHeroDescription] = useState<string>("ARCHITECTURAL VISUALIZATION STUDIO");
@@ -124,6 +125,18 @@ export default function AdminSettingsPage() {
         if (bgDarkData) {
           setBgDark(String(bgDarkData.value));
         }
+
+        const { data: brandData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "brand_primary")
+          .single();
+        
+        if (brandData) {
+          setBrandPrimary(String(brandData.value));
+        }
+
+
 
         const { data: heroData } = await supabase
           .from("site_settings")
@@ -264,6 +277,14 @@ export default function AdminSettingsPage() {
           updated_at: new Date().toISOString()
         });
 
+      await supabase
+        .from("site_settings")
+        .upsert({ 
+          key: "brand_primary", 
+          value: brandPrimary || "#7FC243",
+          updated_at: new Date().toISOString()
+        });
+
       const heroSettings = [
         { key: "hero_heading", value: heroHeading },
         { key: "hero_subheader", value: heroSubheader },
@@ -327,6 +348,7 @@ export default function AdminSettingsPage() {
       setBorderColor(borderColor || "#ffffff");
       setBgLight(bgLight || "#ffffff");
       setBgDark(bgDark || "#09090b");
+      setBrandPrimary(brandPrimary || "#7FC243");
       setItemsPerPage(Math.max(1, parseInt(String(itemsPerPage)) || 50));
       setInitialItems(Math.max(1, parseInt(String(initialItems)) || 50));
 
@@ -715,6 +737,35 @@ export default function AdminSettingsPage() {
                     type="color"
                     value={borderColor}
                     onChange={(e) => setBorderColor(e.target.value)}
+                    className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer overflow-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 px-4 py-6 bg-secondary/10 border border-border/50">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-foreground uppercase tracking-widest">
+                    Primary Brand Color
+                  </label>
+                  <span className="text-[10px] font-mono opacity-50 uppercase">{brandPrimary}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <Input
+                      value={brandPrimary}
+                      onChange={(e) => setBrandPrimary(e.target.value)}
+                      className="h-10 rounded-none bg-background border-border/50 pl-10 font-mono text-sm uppercase"
+                      placeholder="#7FC243"
+                    />
+                    <div 
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border border-border"
+                      style={{ backgroundColor: brandPrimary }}
+                    />
+                  </div>
+                  <Input 
+                    type="color"
+                    value={brandPrimary || "#7FC243"}
+                    onChange={(e) => setBrandPrimary(e.target.value)}
                     className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer overflow-hidden"
                   />
                 </div>
