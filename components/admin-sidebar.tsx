@@ -27,6 +27,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { Logo } from "@/components/Logo";
 
 const items = [
   {
@@ -65,12 +66,7 @@ export function AppSidebar() {
       <SidebarHeader className="h-16 flex items-start justify-center px-6 border-b border-border mb-2">
         <div className="flex items-center gap-1.5">
           <div className="relative w-7 h-7">
-            <Image
-              src="/logo.svg"
-              alt="HORIZON Logo"
-              fill
-              className="object-contain"
-            />
+            <Logo className="w-full h-full" />
           </div>
           <div className="flex flex-col">
             <h1 className="text-sm font-light tracking-tight">HORIZON</h1>

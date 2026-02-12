@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Portal } from "@/components/ui/portal";
 import { supabase } from "@/lib/supabase";
+import { Logo } from "@/components/Logo";
 
 export function Navigation() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -64,12 +65,7 @@ export function Navigation() {
                     className="text-xl md:text-3xl font-light tracking-tighter text-foreground transition-base hover:opacity-70 flex items-center gap-1.5"
                 >
                     <div className="relative w-8 h-8 md:w-10 md:h-10">
-                        <Image 
-                            src="/logo.svg" 
-                            alt="HORIZON Logo" 
-                            fill 
-                            className="object-contain"
-                        />
+                        <Logo className="w-full h-full" />
                     </div>
                     <span>HORIZON</span>
                 </Link>

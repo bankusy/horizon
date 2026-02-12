@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { Logo } from "@/components/Logo";
 
 interface FooterSectionProps {
   title?: string;
@@ -64,12 +65,7 @@ export function Footer() {
           <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex items-center gap-1.5 hover:opacity-70 transition-base cursor-pointer">
               <div className="relative w-8 h-8 md:w-10 md:h-10">
-                <Image
-                  src="/logo.svg"
-                  alt="HORIZON Logo"
-                  fill
-                  className="object-contain"
-                />
+                <Logo className="w-full h-full" />
               </div>
               <h2 className="text-3xl font-light tracking-tighter uppercase leading-none">
                 HORIZON

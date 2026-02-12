@@ -29,29 +29,18 @@ export default async function RootLayout({
   let brandPrimary = "#7FC243";
 
   if (supabase) {
-    const { data: lightData } = await supabase
+    const { data: settings } = await supabase
       .from("site_settings")
-      .select("value")
-      .eq("key", "gallery_bg_light")
-      .single();
-    
-    if (lightData?.value) bgLight = String(lightData.value);
+      .select("key, value")
+      .in("key", ["gallery_bg_light", "gallery_bg_dark", "brand_primary"]);
 
-    const { data: darkData } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("key", "gallery_bg_dark")
-      .single();
-    
-    if (darkData?.value) bgDark = String(darkData.value);
-
-    const { data: brandData } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("key", "brand_primary")
-      .single();
-    
-    if (brandData?.value) brandPrimary = String(brandData.value);
+    if (settings) {
+      settings.forEach((setting: { key: string; value: any }) => {
+        if (setting.key === "gallery_bg_light") bgLight = String(setting.value);
+        if (setting.key === "gallery_bg_dark") bgDark = String(setting.value);
+        if (setting.key === "brand_primary") brandPrimary = String(setting.value);
+      });
+    }
   }
 
   return (

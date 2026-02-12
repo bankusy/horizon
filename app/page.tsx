@@ -9,37 +9,59 @@ import DynamicGalleryView from "@/components/DynamicGalleryView";
 async function getInitialData() {
     if (!supabase) return { banners: [], initialImages: [], nextCursor: null };
 
-    // 0. 페이징 설정 조회
-    const { data: pagingData } = await supabase
+    // Start fetching independent data in parallel
+    const pagingDataPromise = supabase
         .from("site_settings")
         .select("value")
         .eq("key", "gallery_items_per_page")
         .single();
-    
-    const itemsPerPage = Number(pagingData?.value) || 50;
 
-    const { data: initialPagingData } = await supabase
+    const initialPagingDataPromise = supabase
         .from("site_settings")
         .select("value")
         .eq("key", "gallery_initial_items")
         .single();
     
-    const initialItemsCount = Number(initialPagingData?.value) || 50;
-
     // 1. 배너 데이터 페칭
-    const { data: bannerData } = await supabase
+    const bannerDataPromise = supabase
         .from("banners")
         .select("*")
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
 
+    // 3. 히어로 데이터 페칭
+    const heroDataPromise = supabase
+        .from("site_settings")
+        .select("key, value")
+        .like("key", "hero_%");
+
+    // Await detailed settings for image fetching
+    const [pagingDataResult, initialPagingDataResult] = await Promise.all([
+        pagingDataPromise,
+        initialPagingDataPromise
+    ]);
+    
+    const itemsPerPage = Number(pagingDataResult.data?.value) || 50;
+    const initialItemsCount = Number(initialPagingDataResult.data?.value) || 50;
+
     // 2. 초기 갤러리 이미지 데이터 페칭 (설정된 개수만큼)
-    const { data: imageData, count } = await supabase
+    const imageDataPromise = supabase
         .from("gallery")
         .select("*", { count: "exact" })
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false })
         .range(0, initialItemsCount - 1);
+
+    const [bannerDataResult, imageDataResult, heroDataResult] = await Promise.all([
+        bannerDataPromise,
+        imageDataPromise,
+        heroDataPromise
+    ]);
+
+    const bannerData = bannerDataResult.data || [];
+    const imageData = imageDataResult.data;
+    const count = imageDataResult.count;
+    const heroData = heroDataResult.data;
 
     const initialImages = imageData?.map((item: any) => ({
         id: item.id,
@@ -53,12 +75,6 @@ async function getInitialData() {
 
     const hasNext = count ? initialItemsCount < count : false;
 
-    // 3. 히어로 데이터 페칭
-    const { data: heroData } = await supabase
-        .from("site_settings")
-        .select("key, value")
-        .like("key", "hero_%");
-    
     const heroSettings: any = {};
     if (heroData) {
         heroData.forEach((item: { key: string; value: any }) => {
@@ -67,7 +83,7 @@ async function getInitialData() {
     }
 
     return {
-        banners: bannerData || [],
+        banners: bannerData,
         initialImages,
         nextCursor: hasNext ? initialImages.length : null,
         itemsPerPage,

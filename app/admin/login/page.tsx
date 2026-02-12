@@ -9,6 +9,7 @@ import { Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import Image from "next/image";
+import { Logo } from "@/components/Logo";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -59,12 +60,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
         <div className="flex items-center justify-center mb-8 gap-1.5">
             <div className="relative w-8 h-8">
-                <Image
-                    src="/logo.svg"
-                    alt="HORIZON Logo"
-                    fill
-                    className="object-contain"
-                />
+                <Logo className="w-full h-full" />
             </div>
             <h1 className="text-xl font-light tracking-tighter uppercase italic">HORIZON</h1>
         </div>
